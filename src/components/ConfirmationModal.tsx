@@ -35,7 +35,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
         </div>
         
         <div className="bg-secondary rounded-xl p-4 mb-6 border border-primary/20">
-          <p className="font-medium text-white">{userName}</p>
+          <p className="font-medium text-foreground">{userName}</p>
           <p className="text-sm text-muted-foreground">{day}, {date}</p>
           <p className="text-sm text-muted-foreground">Horário: {time}</p>
         </div>

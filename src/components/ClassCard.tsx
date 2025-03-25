@@ -35,7 +35,7 @@ const ClassCard: React.FC<ClassCardProps> = ({
         <div className="flex justify-between items-start mb-3">
           <div>
             <p className="text-sm font-medium text-muted-foreground">{day}</p>
-            <h3 className="text-lg font-semibold text-white">{date}</h3>
+            <h3 className="text-lg font-semibold text-foreground">{date}</h3>
           </div>
           {isPast && (
             <span className="text-xs bg-primary/40 px-2 py-1 rounded-full text-white">
