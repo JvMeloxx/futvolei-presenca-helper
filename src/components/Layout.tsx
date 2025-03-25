@@ -22,7 +22,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </div>
       </main>
       
-      <nav className="fixed bottom-0 left-0 right-0 glass-effect border-t border-primary/30 p-2 z-10">
+      <nav className="fixed bottom-0 left-0 right-0 bg-secondary border-t border-primary/30 p-2 z-10">
         <div className="flex justify-around max-w-md mx-auto">
           <Link to="/" className={`flex flex-col items-center p-2 ${isActive('/')}`}>
             <Home size={20} />

@@ -31,14 +31,14 @@ const ClassCard: React.FC<ClassCardProps> = ({
         ${isSelected ? 'ring-2 ring-primary' : ''}
       `}
     >
-      <div className="glass-effect p-4 border border-primary/30">
+      <div className="glass-effect p-4">
         <div className="flex justify-between items-start mb-3">
           <div>
-            <p className="text-sm font-medium text-muted-foreground">{day}</p>
-            <h3 className="text-lg font-semibold text-foreground">{date}</h3>
+            <p className="text-sm font-medium text-primary-foreground/80">{day}</p>
+            <h3 className="text-lg font-semibold text-primary-foreground">{date}</h3>
           </div>
           {isPast && (
-            <span className="text-xs bg-primary/40 px-2 py-1 rounded-full text-white">
+            <span className="text-xs bg-primary/20 px-2 py-1 rounded-full text-primary-foreground">
               Passado
             </span>
           )}
@@ -49,12 +49,12 @@ const ClassCard: React.FC<ClassCardProps> = ({
           )}
         </div>
         
-        <div className="flex items-center text-sm text-muted-foreground mb-2">
+        <div className="flex items-center text-sm text-primary-foreground/80 mb-2">
           <Clock size={14} className="mr-1 text-primary" />
           <span>{time}</span>
         </div>
         
-        <div className="flex items-center text-sm text-muted-foreground">
+        <div className="flex items-center text-sm text-primary-foreground/80">
           <Users size={14} className="mr-1 text-primary" />
           <span>{confirmedCount} confirmados</span>
         </div>
