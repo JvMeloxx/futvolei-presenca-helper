@@ -24,7 +24,7 @@ const UserAvatar: React.FC<UserAvatarProps> = ({ src, name, size = 'md' }) => {
   };
 
   return (
-    <div className={`${sizeClasses[size]} rounded-full overflow-hidden flex items-center justify-center bg-primary text-primary-foreground font-medium`}>
+    <div className={`${sizeClasses[size]} rounded-full overflow-hidden flex items-center justify-center bg-primary text-white font-medium border border-white/20`}>
       {src ? (
         <img 
           src={src} 

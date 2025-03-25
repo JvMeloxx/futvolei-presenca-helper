@@ -5,33 +5,33 @@
 
 @layer base {
   :root {
-    --background: 210 40% 98%;
-    --foreground: 222 47% 11%;
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card: 0 0% 0%;
+    --card-foreground: 0 0% 100%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover: 0 0% 0%;
+    --popover-foreground: 0 0% 100%;
 
-    --primary: 210 100% 50%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 0 100% 50%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222 47% 11%;
+    --secondary: 0 0% 10%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
+    --muted: 0 0% 20%;
+    --muted-foreground: 0 0% 70%;
 
-    --accent: 210 40% 96%;
-    --accent-foreground: 222 47% 11%;
+    --accent: 0 80% 40%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 210 100% 50%;
+    --border: 0 80% 40%;
+    --input: 0 0% 20%;
+    --ring: 0 100% 50%;
 
     --radius: 0.75rem;
   }
@@ -49,11 +49,11 @@
 
 /* Custom styles */
 .glass-effect {
-  @apply bg-white/80 backdrop-blur-md border border-white/20 shadow-sm;
+  @apply bg-black/90 backdrop-blur-md border border-primary/30 shadow-sm;
 }
 
 .card-hover {
-  @apply transition-all duration-300 hover:shadow-md hover:-translate-y-1;
+  @apply transition-all duration-300 hover:shadow-md hover:-translate-y-1 hover:shadow-primary/20;
 }
 
 .page-transition {
@@ -78,7 +78,7 @@
 
 /* Typography enhancements */
 h1, h2, h3, h4, h5, h6 {
-  @apply font-medium tracking-tight;
+  @apply font-bold tracking-tight text-primary;
 }
 
 h1 {
@@ -96,7 +96,7 @@ html {
 
 /* Custom button styles */
 .button-primary {
-  @apply rounded-full bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 h-10 px-5 py-2 transition-all duration-300;
+  @apply rounded-full bg-primary text-primary-foreground shadow-sm border border-white hover:bg-black hover:border-primary hover:text-white h-10 px-5 py-2 transition-all duration-300;
 }
 
 .button-secondary {
@@ -114,7 +114,7 @@ html {
 }
 
 .shimmer {
-  background: linear-gradient(to right, #f6f7f8 8%, #edeef1 18%, #f6f7f8 33%);
+  background: linear-gradient(to right, #1a1a1a 8%, #2a2a2a 18%, #1a1a1a 33%);
   background-size: 1000px 100%;
   animation: shimmer 2s infinite linear;
 }

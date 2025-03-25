@@ -27,18 +27,18 @@ const ClassCard: React.FC<ClassCardProps> = ({
       to={isPast ? '#' : `/class/${id}`}
       className={`
         block rounded-xl overflow-hidden card-hover
-        ${isPast ? 'opacity-60 pointer-events-none' : ''}
+        ${isPast ? 'opacity-40 pointer-events-none' : ''}
         ${isSelected ? 'ring-2 ring-primary' : ''}
       `}
     >
-      <div className="glass-effect p-4">
+      <div className="glass-effect p-4 border border-primary/30">
         <div className="flex justify-between items-start mb-3">
           <div>
             <p className="text-sm font-medium text-muted-foreground">{day}</p>
-            <h3 className="text-lg font-semibold">{date}</h3>
+            <h3 className="text-lg font-semibold text-white">{date}</h3>
           </div>
           {isPast && (
-            <span className="text-xs bg-secondary px-2 py-1 rounded-full">
+            <span className="text-xs bg-primary/40 px-2 py-1 rounded-full text-white">
               Passado
             </span>
           )}
@@ -50,12 +50,12 @@ const ClassCard: React.FC<ClassCardProps> = ({
         </div>
         
         <div className="flex items-center text-sm text-muted-foreground mb-2">
-          <Clock size={14} className="mr-1" />
+          <Clock size={14} className="mr-1 text-primary" />
           <span>{time}</span>
         </div>
         
         <div className="flex items-center text-sm text-muted-foreground">
-          <Users size={14} className="mr-1" />
+          <Users size={14} className="mr-1 text-primary" />
           <span>{confirmedCount} confirmados</span>
         </div>
       </div>

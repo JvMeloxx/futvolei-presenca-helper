@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Calendar, User, LogOut } from 'lucide-react';
+import { Home, Calendar, User } from 'lucide-react';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -22,7 +22,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </div>
       </main>
       
-      <nav className="fixed bottom-0 left-0 right-0 glass-effect border-t border-border p-2 z-10">
+      <nav className="fixed bottom-0 left-0 right-0 glass-effect border-t border-primary/30 p-2 z-10">
         <div className="flex justify-around max-w-md mx-auto">
           <Link to="/" className={`flex flex-col items-center p-2 ${isActive('/')}`}>
             <Home size={20} />
