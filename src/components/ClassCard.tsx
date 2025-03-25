@@ -1,0 +1,66 @@
+
+import React from 'react';
+import { Clock, Users } from 'lucide-react';
+import { Link } from 'react-router-dom';
+
+interface ClassCardProps {
+  id: string;
+  day: string;
+  date: string;
+  time: string;
+  confirmedCount: number;
+  isPast?: boolean;
+  isSelected?: boolean;
+}
+
+const ClassCard: React.FC<ClassCardProps> = ({
+  id,
+  day,
+  date,
+  time,
+  confirmedCount,
+  isPast = false,
+  isSelected = false,
+}) => {
+  return (
+    <Link
+      to={isPast ? '#' : `/class/${id}`}
+      className={`
+        block rounded-xl overflow-hidden card-hover
+        ${isPast ? 'opacity-60 pointer-events-none' : ''}
+        ${isSelected ? 'ring-2 ring-primary' : ''}
+      `}
+    >
+      <div className="glass-effect p-4">
+        <div className="flex justify-between items-start mb-3">
+          <div>
+            <p className="text-sm font-medium text-muted-foreground">{day}</p>
+            <h3 className="text-lg font-semibold">{date}</h3>
+          </div>
+          {isPast && (
+            <span className="text-xs bg-secondary px-2 py-1 rounded-full">
+              Passado
+            </span>
+          )}
+          {isSelected && (
+            <span className="text-xs bg-primary text-primary-foreground px-2 py-1 rounded-full">
+              Selecionado
+            </span>
+          )}
+        </div>
+        
+        <div className="flex items-center text-sm text-muted-foreground mb-2">
+          <Clock size={14} className="mr-1" />
+          <span>{time}</span>
+        </div>
+        
+        <div className="flex items-center text-sm text-muted-foreground">
+          <Users size={14} className="mr-1" />
+          <span>{confirmedCount} confirmados</span>
+        </div>
+      </div>
+    </Link>
+  );
+};
+
+export default ClassCard;
