@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import Button from '../components/Button';
 import { Input } from '../components/ui/input';
 import { ChevronRight, User, Key } from 'lucide-react';
@@ -122,9 +122,9 @@ const Login: React.FC = () => {
           <div className="mt-6 text-center">
             <p className="text-sm text-primary-foreground">
               Não tem uma conta?{' '}
-              <a href="#" className="text-primary font-medium hover:underline">
+              <Link to="/register" className="text-primary font-medium hover:underline">
                 Cadastre-se
-              </a>
+              </Link>
             </p>
           </div>
         </div>
