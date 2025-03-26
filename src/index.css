@@ -107,6 +107,19 @@ html {
   @apply rounded-full hover:bg-secondary text-foreground h-10 px-5 py-2 transition-all duration-300;
 }
 
+/* Form input styles */
+.input-field {
+  @apply text-black bg-white border-2 border-primary/60 px-3 py-2 rounded-md placeholder:text-primary/70 focus:border-primary focus:ring-2 focus:ring-primary/30;
+}
+
+.input-field.success {
+  @apply border-green-600 bg-green-50 focus:border-green-600 focus:ring-green-600/30;
+}
+
+.input-field.error {
+  @apply border-destructive/80 bg-destructive/10 focus:border-destructive focus:ring-destructive/30;
+}
+
 /* Custom animations */
 @keyframes shimmer {
   0% { background-position: -1000px 0; }
