@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
@@ -130,7 +129,7 @@ const ClassDetails: React.FC = () => {
                 className="flex items-center justify-between p-3 rounded-xl bg-secondary/50"
               >
                 <div className="flex items-center">
-                  <UserAvatar name={user.name} src={user.avatar} size="sm" />
+                  <UserAvatar name={user.name} imageUrl={user.avatar} size="sm" />
                   <span className="ml-3 font-medium">{user.name}</span>
                 </div>
                 <Check size={16} className="text-green-500" />
