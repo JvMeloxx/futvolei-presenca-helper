@@ -18,7 +18,15 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     <div className="flex flex-col min-h-screen bg-background">
       <header className="py-4 px-4 text-center">
         <Link to="/" className="inline-block">
-          <img src="/logo-futevolei.png" alt="Logo Futevôlei" className="h-12 w-auto" />
+          <img 
+            src="/logo-futevolei.png" 
+            alt="Logo Futevôlei" 
+            className="h-12 w-auto" 
+            onError={(e) => {
+              console.error('Erro ao carregar a imagem:', e);
+              e.currentTarget.src = 'https://i.imgur.com/ZJkLbak.png';
+            }}
+          />
         </Link>
       </header>
       <main className="flex-1 container mx-auto px-4 pb-24 pt-2 md:pt-4">

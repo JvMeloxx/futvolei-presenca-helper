@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import Button from '../components/Button';
@@ -55,7 +56,11 @@ const Login: React.FC = () => {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="mx-auto w-24 h-24 rounded-full overflow-hidden flex items-center justify-center mb-6">
-            <img src="/logo-futevolei.png" alt="Logo Futevôlei" className="w-full h-full object-contain" />
+            <img 
+              src="https://i.imgur.com/ZJkLbak.png" 
+              alt="Logo Futevôlei" 
+              className="w-full h-full object-contain" 
+            />
           </div>
           <h1 className="text-2xl font-bold mb-2 text-primary">Futevôlei Presença</h1>
           <p className="text-black">Faça login para confirmar sua presença nas aulas</p>
