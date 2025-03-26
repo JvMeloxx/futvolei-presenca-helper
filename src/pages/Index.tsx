@@ -9,6 +9,8 @@ import { Calendar, ChevronRight, Clock } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import ClassConfirmationModal from '@/components/ClassConfirmationModal';
+import { findNextClass } from '@/repositories/classRepository';
 
 // Map of weekdays
 const weekdayMap = {
@@ -76,6 +78,8 @@ const Index: React.FC = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [upcomingClasses, setUpcomingClasses] = useState<any[]>([]);
   const [nextClass, setNextClass] = useState<any | null>(null);
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+  const [selectedClass, setSelectedClass] = useState<any | null>(null);
   const { user, isLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -96,7 +100,7 @@ const Index: React.FC = () => {
       
       if (preferredDays.length > 0) {
         // Calculate next classes based on preferred days
-        findNextClass(preferredDays);
+        calculateNextAndUpcomingClasses(preferredDays);
       } else {
         // Default upcoming classes if no preferences
         setUpcomingClasses([
@@ -108,73 +112,19 @@ const Index: React.FC = () => {
     }
   }, [user]);
   
-  const findNextClass = (preferredDays: string[]) => {
+  const calculateNextAndUpcomingClasses = (preferredDays: string[]) => {
+    // Find next class
+    const nextClassInfo = findNextClass(preferredDays, classesByDay);
+    if (nextClassInfo) {
+      setNextClass(nextClassInfo);
+    }
+    
     const today = currentTime.getDay(); // 0 is Sunday, 1 is Monday, etc.
-    const sortedPreferredDays = [...preferredDays].sort();
     const upcoming: any[] = [];
     
-    // Find next class based on the current day
-    let nextClassDay = null;
-    
-    // Try to find a day later in the current week
-    for (const day of sortedPreferredDays) {
-      const dayNumber = weekdayMap[day];
-      if (dayNumber > today) {
-        nextClassDay = day;
-        break;
-      }
-    }
-    
-    // If no day found later in the week, take the first preferred day (for next week)
-    if (!nextClassDay && sortedPreferredDays.length > 0) {
-      nextClassDay = sortedPreferredDays[0];
-    }
-    
-    // Get today's classes if it's in preferred days
-    const todayName = reverseWeekdayMap[today];
-    if (preferredDays.includes(todayName)) {
-      const dayKey = dayToClassesMap[todayName];
-      const todayClasses = classesByDay[dayKey as keyof typeof classesByDay] || [];
-      
-      // Find classes later today
-      const nowHours = currentTime.getHours();
-      const nowMinutes = currentTime.getMinutes();
-      
-      const laterTodayClass = todayClasses.find(cls => {
-        const [hours, minutes] = cls.time.split(':').map(Number);
-        return hours > nowHours || (hours === nowHours && minutes > nowMinutes);
-      });
-      
-      if (laterTodayClass) {
-        setNextClass({
-          id: laterTodayClass.id,
-          day: todayName,
-          date: 'Hoje',
-          time: laterTodayClass.time,
-          confirmedCount: laterTodayClass.confirmedCount
-        });
-      }
-    }
-    
-    // If no class found for today, use the next preferred day
-    if (!nextClass && nextClassDay) {
-      const dayKey = dayToClassesMap[nextClassDay];
-      const dayClasses = classesByDay[dayKey as keyof typeof classesByDay] || [];
-      
-      if (dayClasses.length > 0) {
-        setNextClass({
-          id: dayClasses[0].id,
-          day: nextClassDay,
-          date: 'Próxima aula',
-          time: dayClasses[0].time,
-          confirmedCount: dayClasses[0].confirmedCount
-        });
-      }
-    }
-    
     // Set upcoming classes (max 3)
-    for (const day of sortedPreferredDays) {
-      const dayKey = dayToClassesMap[day];
+    for (const day of preferredDays) {
+      const dayKey = dayToClassesMap[day as keyof typeof dayToClassesMap];
       const dayClasses = classesByDay[dayKey as keyof typeof classesByDay] || [];
       
       if (dayClasses.length > 0) {
@@ -196,7 +146,7 @@ const Index: React.FC = () => {
   
   const formatNextDate = (dayName: string) => {
     const today = currentTime.getDay();
-    const targetDay = weekdayMap[dayName];
+    const targetDay = weekdayMap[dayName as keyof typeof weekdayMap];
     let daysToAdd = targetDay - today;
     
     if (daysToAdd <= 0) {
@@ -209,7 +159,7 @@ const Index: React.FC = () => {
     return `${nextDate.getDate()} ${new Intl.DateTimeFormat('pt-BR', { month: 'short' }).format(nextDate)}`;
   };
   
-  const handleConfirmClass = (classId: string) => {
+  const handleConfirmClass = (classId: string, day: string, date: string, time: string) => {
     if (!user) {
       toast({
         title: "Autenticação necessária",
@@ -220,7 +170,26 @@ const Index: React.FC = () => {
       return;
     }
     
-    navigate(`/class/${classId}`);
+    // Check if it's a preferred day
+    const preferredDays = user.user_metadata?.preferred_days || [];
+    const isPreferredDay = Array.isArray(preferredDays) && preferredDays.includes(day);
+    
+    setSelectedClass({
+      id: classId,
+      day,
+      date,
+      time,
+      isPreferredDay
+    });
+    
+    setShowConfirmationModal(true);
+  };
+  
+  const handleConfirmSuccess = () => {
+    // Refresh the class list after successful confirmation
+    if (user?.user_metadata?.preferred_days) {
+      calculateNextAndUpcomingClasses(user.user_metadata.preferred_days);
+    }
   };
   
   const formattedDate = new Intl.DateTimeFormat('pt-BR', {
@@ -264,14 +233,14 @@ const Index: React.FC = () => {
             <div className="bg-secondary rounded-xl p-4 mb-4">
               <div className="flex justify-between items-center">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">{nextClass.date}</p>
+                  <p className="text-sm font-medium text-muted-foreground">{nextClass.day}, {nextClass.date}</p>
                   <h3 className="text-lg font-semibold">{nextClass.time}</h3>
                 </div>
                 <Button 
                   variant="primary" 
                   size="sm"
                   rightIcon={<ChevronRight size={16} />}
-                  onClick={() => handleConfirmClass(nextClass.id)}
+                  onClick={() => handleConfirmClass(nextClass.id, nextClass.day, nextClass.date, nextClass.time)}
                 >
                   Confirmar
                 </Button>
@@ -318,7 +287,10 @@ const Index: React.FC = () => {
             {upcomingClasses.length > 0 ? (
               upcomingClasses.map((classItem, index) => (
                 <div key={classItem.id} className="staggered-item">
-                  <ClassCard {...classItem} />
+                  <ClassCard 
+                    {...classItem} 
+                    onClick={() => handleConfirmClass(classItem.id, classItem.day, classItem.date, classItem.time)}
+                  />
                 </div>
               ))
             ) : (
@@ -329,6 +301,21 @@ const Index: React.FC = () => {
           </div>
         </div>
       </div>
+      
+      {/* Confirmation Modal */}
+      {selectedClass && (
+        <ClassConfirmationModal
+          isOpen={showConfirmationModal}
+          onClose={() => setShowConfirmationModal(false)}
+          classId={selectedClass.id}
+          day={selectedClass.day}
+          date={selectedClass.date}
+          time={selectedClass.time}
+          userName={user?.user_metadata?.full_name || 'Usuário'}
+          isPreferredDay={selectedClass.isPreferredDay}
+          onConfirmSuccess={handleConfirmSuccess}
+        />
+      )}
     </Layout>
   );
 };

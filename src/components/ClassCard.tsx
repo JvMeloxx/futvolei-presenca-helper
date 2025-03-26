@@ -12,6 +12,7 @@ interface ClassCardProps {
   isPast?: boolean;
   isSelected?: boolean;
   onClick?: () => void;
+  showDetails?: boolean;
 }
 
 const ClassCard: React.FC<ClassCardProps> = ({
@@ -23,6 +24,7 @@ const ClassCard: React.FC<ClassCardProps> = ({
   isPast = false,
   isSelected = false,
   onClick,
+  showDetails = true,
 }) => {
   const handleClick = (e: React.MouseEvent) => {
     if (isPast) return;
@@ -60,15 +62,19 @@ const ClassCard: React.FC<ClassCardProps> = ({
           )}
         </div>
         
-        <div className="flex items-center text-sm text-primary-foreground/80 mb-2">
-          <Clock size={14} className="mr-1 text-primary" />
-          <span>{time}</span>
-        </div>
-        
-        <div className="flex items-center text-sm text-primary-foreground/80">
-          <Users size={14} className="mr-1 text-primary" />
-          <span>{confirmedCount} confirmados</span>
-        </div>
+        {showDetails && (
+          <>
+            <div className="flex items-center text-sm text-primary-foreground/80 mb-2">
+              <Clock size={14} className="mr-1 text-primary" />
+              <span>{time}</span>
+            </div>
+            
+            <div className="flex items-center text-sm text-primary-foreground/80">
+              <Users size={14} className="mr-1 text-primary" />
+              <span>{confirmedCount} confirmados</span>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
