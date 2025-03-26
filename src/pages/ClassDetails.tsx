@@ -235,7 +235,7 @@ const ClassDetails: React.FC = () => {
           {/* Confirmation button */}
           <div className="mb-6">
             <Button 
-              variant={classDetails.user_confirmed ? "outline" : "primary"}
+              variant={classDetails.user_confirmed ? "secondary" : "primary"}
               size="lg"
               isLoading={isConfirming}
               onClick={handleConfirmToggle}
