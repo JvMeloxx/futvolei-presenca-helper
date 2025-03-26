@@ -142,7 +142,7 @@ const ClassConfirmationModal: React.FC<ClassConfirmationModalProps> = ({
             fullWidth 
             onClick={handleConfirm}
             leftIcon={<Check size={18} />}
-            loading={isSubmitting}
+            isLoading={isSubmitting}
           >
             Confirmar
           </Button>
