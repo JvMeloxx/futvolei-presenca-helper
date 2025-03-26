@@ -11,6 +11,7 @@ interface ClassCardProps {
   confirmedCount: number;
   isPast?: boolean;
   isSelected?: boolean;
+  onClick?: () => void;
 }
 
 const ClassCard: React.FC<ClassCardProps> = ({
@@ -21,13 +22,23 @@ const ClassCard: React.FC<ClassCardProps> = ({
   confirmedCount,
   isPast = false,
   isSelected = false,
+  onClick,
 }) => {
+  const handleClick = (e: React.MouseEvent) => {
+    if (isPast) return;
+    
+    if (onClick) {
+      e.preventDefault();
+      onClick();
+    }
+  };
+
   return (
-    <Link
-      to={isPast ? '#' : `/class/${id}`}
+    <div
+      onClick={handleClick}
       className={`
         block rounded-xl overflow-hidden card-hover
-        ${isPast ? 'opacity-40 pointer-events-none' : ''}
+        ${isPast ? 'opacity-40 pointer-events-none' : 'cursor-pointer'}
         ${isSelected ? 'ring-2 ring-primary' : ''}
       `}
     >
@@ -59,7 +70,7 @@ const ClassCard: React.FC<ClassCardProps> = ({
           <span>{confirmedCount} confirmados</span>
         </div>
       </div>
-    </Link>
+    </div>
   );
 };
 
