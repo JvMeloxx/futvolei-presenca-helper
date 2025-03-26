@@ -135,8 +135,8 @@ const Register: React.FC = () => {
         </div>
         
         <div className="text-center mb-8">
-          <div className="mx-auto w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center mb-6">
-            <img src="/placeholder.svg" alt="Logo" className="w-12 h-12" />
+          <div className="mx-auto w-24 h-24 rounded-full overflow-hidden flex items-center justify-center mb-6">
+            <img src="/logo-futevolei.png" alt="Logo Futevôlei" className="w-full h-full object-contain" />
           </div>
           <h1 className="text-2xl font-bold mb-2 text-primary">Futvôlei Presença</h1>
           <p className="text-white">Cadastre-se para acompanhar as aulas</p>

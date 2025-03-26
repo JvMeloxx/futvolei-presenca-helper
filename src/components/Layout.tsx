@@ -16,7 +16,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
-      <main className="flex-1 container mx-auto px-4 pb-24 pt-6 md:pt-10">
+      <header className="py-4 px-4 text-center">
+        <Link to="/" className="inline-block">
+          <img src="/logo-futevolei.png" alt="Logo Futevôlei" className="h-12 w-auto" />
+        </Link>
+      </header>
+      <main className="flex-1 container mx-auto px-4 pb-24 pt-2 md:pt-4">
         <div className="page-transition">
           {children}
         </div>
