@@ -152,13 +152,25 @@ const Schedule: React.FC = () => {
   
   const selectedDayClasses = classesByDay[selectedDay as keyof typeof classesByDay] || [];
 
-  // Get user preferred days for highlighting
+  // Get user preferred days for highlighting - FIX HERE
   const userPreferredDays = user?.user_metadata?.preferred_days || [];
   
+  // Ensure preferred days is always an array - THIS IS THE FIX
+  let preferredDaysArray: string[] = [];
+  if (userPreferredDays) {
+    // Check if it's already an array
+    if (Array.isArray(userPreferredDays)) {
+      preferredDaysArray = userPreferredDays;
+    } else if (typeof userPreferredDays === 'string') {
+      // If it's a comma-separated string, split it
+      preferredDaysArray = userPreferredDays.split(',');
+    }
+  }
+  
   // Convert preferred days to day values
-  const preferredDayValues = userPreferredDays.map((day: string) => 
-    weekDays.find(d => d.name === day)?.value
-  ).filter(Boolean);
+  const preferredDayValues = preferredDaysArray
+    .map((day: string) => weekDays.find(d => d.name === day)?.value)
+    .filter(Boolean);
 
   return (
     <Layout>
@@ -239,7 +251,19 @@ const Schedule: React.FC = () => {
             <div className="grid grid-cols-1 gap-4">
               {selectedDayClasses.map((classItem, index) => {
                 const dayName = weekDays.find(d => d.value === selectedDay)?.name || '';
-                const isUserPreferredTime = user?.user_metadata?.preferred_times?.includes(classItem.time.replace(':', 'h'));
+                // Also fix here for preferred times
+                const userPreferredTimes = user?.user_metadata?.preferred_times || [];
+                let preferredTimesArray: string[] = [];
+                
+                if (userPreferredTimes) {
+                  if (Array.isArray(userPreferredTimes)) {
+                    preferredTimesArray = userPreferredTimes;
+                  } else if (typeof userPreferredTimes === 'string') {
+                    preferredTimesArray = userPreferredTimes.split(',');
+                  }
+                }
+                
+                const isUserPreferredTime = preferredTimesArray.includes(classItem.time.replace(':', 'h'));
                 
                 return (
                   <div key={classItem.id} className="staggered-item">
