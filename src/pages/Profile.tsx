@@ -5,6 +5,7 @@ import Button from '../components/Button';
 import UserAvatar from '../components/UserAvatar';
 import { useAuth } from '@/contexts/AuthContext';
 import { Camera, Calendar, Clock, Save, LogOut, User, Mail, Phone } from 'lucide-react';
+import { Input } from '../components/ui/input';
 
 // Day and time options
 const dayOptions = [
@@ -155,7 +156,7 @@ const Profile: React.FC = () => {
           
           <div className="space-y-4">
             <div>
-              <label htmlFor="name" className="block text-sm font-medium mb-1">
+              <label htmlFor="name" className="block text-sm font-medium mb-1 text-primary perfil-label">
                 Nome completo
               </label>
               <input
@@ -163,18 +164,18 @@ const Profile: React.FC = () => {
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                className="perfil-input w-full h-10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                 placeholder="Seu nome completo"
                 required
               />
             </div>
             
             <div>
-              <label htmlFor="email" className="block text-sm font-medium mb-1">
+              <label htmlFor="email" className="block text-sm font-medium mb-1 text-primary perfil-label">
                 Email
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-muted-foreground">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-primary/70">
                   <Mail size={14} />
                 </div>
                 <input
@@ -190,11 +191,11 @@ const Profile: React.FC = () => {
             </div>
             
             <div>
-              <label htmlFor="phone" className="block text-sm font-medium mb-1">
+              <label htmlFor="phone" className="block text-sm font-medium mb-1 text-primary perfil-label">
                 Telefone
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-muted-foreground">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-primary/70">
                   <Phone size={14} />
                 </div>
                 <input
@@ -202,7 +203,7 @@ const Profile: React.FC = () => {
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="pl-10 w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="perfil-input pl-10 w-full h-10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                   placeholder="(00) 00000-0000"
                 />
               </div>

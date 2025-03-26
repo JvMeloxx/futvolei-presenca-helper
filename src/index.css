@@ -120,6 +120,26 @@ html {
   @apply border-destructive/80 bg-destructive/10 focus:border-destructive focus:ring-destructive/30;
 }
 
+/* Profile input styles */
+.perfil-input {
+  color: #000000;           /* Texto preto */
+  background-color: #FFFFFF; /* Fundo branco */
+  border: 2px solid #FF0000; /* Borda vermelha */
+  padding: 10px;
+  font-size: 16px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.perfil-input::placeholder {
+  color: rgba(255, 0, 0, 0.7); /* Placeholder em vermelho suave */
+}
+
+.perfil-label {
+  color: #FF0000;  /* Labels em vermelho */
+  font-weight: bold;
+}
+
 /* Custom animations */
 @keyframes shimmer {
   0% { background-position: -1000px 0; }
