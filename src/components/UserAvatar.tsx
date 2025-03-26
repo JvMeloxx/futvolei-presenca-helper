@@ -1,44 +1,55 @@
 
 import React from 'react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { User } from 'lucide-react';
 
 interface UserAvatarProps {
-  src?: string;
-  name: string;
+  name?: string;
+  imageUrl?: string | null;
   size?: 'sm' | 'md' | 'lg';
 }
 
-const UserAvatar: React.FC<UserAvatarProps> = ({ src, name, size = 'md' }) => {
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(part => part[0])
-      .join('')
-      .toUpperCase()
-      .substring(0, 2);
+const UserAvatar: React.FC<UserAvatarProps> = ({ name = '', imageUrl, size = 'md' }) => {
+  // Gera as iniciais a partir do nome
+  const generateInitials = (name: string) => {
+    const parts = name.split(' ').filter(Boolean);
+    if (parts.length === 0) return '?';
+    if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+    return `${parts[0].charAt(0)}${parts[parts.length - 1].charAt(0)}`.toUpperCase();
   };
 
-  const sizeClasses = {
-    sm: 'w-8 h-8 text-xs',
-    md: 'w-10 h-10 text-sm',
-    lg: 'w-16 h-16 text-xl'
-  };
+  // Define o tamanho com base na prop
+  const sizeClass = {
+    sm: 'h-8 w-8',
+    md: 'h-10 w-10',
+    lg: 'h-24 w-24'
+  }[size];
+
+  // Define o tamanho do ícone e texto com base no tamanho do avatar
+  const iconSize = {
+    sm: 14,
+    md: 18,
+    lg: 36
+  }[size];
+
+  const textSize = {
+    sm: 'text-xs',
+    md: 'text-sm',
+    lg: 'text-xl'
+  }[size];
 
   return (
-    <div className={`${sizeClasses[size]} rounded-full overflow-hidden flex items-center justify-center bg-primary text-white font-medium border border-white/20 shadow-sm`}>
-      {src ? (
-        <img 
-          src={src} 
-          alt={name} 
-          className="w-full h-full object-cover"
-          onError={(e) => {
-            e.currentTarget.src = '';
-            e.currentTarget.onerror = null;
-          }} 
-        />
+    <Avatar className={`${sizeClass} ${size === 'lg' ? 'border-2 border-primary' : ''}`}>
+      {imageUrl ? (
+        <AvatarImage src={imageUrl} alt={name || 'Avatar do usuário'} />
       ) : (
-        <span>{getInitials(name)}</span>
+        <AvatarFallback 
+          className={`bg-primary/10 text-primary flex items-center justify-center ${textSize}`}
+        >
+          {name ? generateInitials(name) : <User size={iconSize} />}
+        </AvatarFallback>
       )}
-    </div>
+    </Avatar>
   );
 };
 

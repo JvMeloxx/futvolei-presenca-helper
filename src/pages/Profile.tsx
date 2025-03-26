@@ -1,54 +1,79 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import Button from '../components/Button';
 import UserAvatar from '../components/UserAvatar';
+import { useAuth } from '@/contexts/AuthContext';
 import { Camera, Calendar, Clock, Save, LogOut, User, Mail, Phone } from 'lucide-react';
-
-// Mock user data
-const userData = {
-  name: 'Carlos Silva',
-  email: 'carlos.silva@example.com',
-  phone: '(11) 98765-4321',
-  preferredDays: ['monday', 'wednesday'],
-  preferredTimes: ['18:30', '20:00'],
-};
 
 // Day and time options
 const dayOptions = [
-  { value: 'monday', label: 'Segunda-feira' },
-  { value: 'tuesday', label: 'Terça-feira' },
-  { value: 'wednesday', label: 'Quarta-feira' },
-  { value: 'thursday', label: 'Quinta-feira' },
+  { value: 'Segunda', label: 'Segunda-feira' },
+  { value: 'Terça', label: 'Terça-feira' },
+  { value: 'Quarta', label: 'Quarta-feira' },
+  { value: 'Quinta', label: 'Quinta-feira' },
 ];
 
 const timeOptions = [
-  { value: '6:30', label: '6:30' },
-  { value: '8:00', label: '8:00' },
-  { value: '8:30', label: '8:30' },
-  { value: '12:00', label: '12:00' },
-  { value: '17:00', label: '17:00' },
-  { value: '18:30', label: '18:30' },
-  { value: '20:00', label: '20:00' },
+  { value: '6h30', label: '6:30' },
+  { value: '8h', label: '8:00' },
+  { value: '8h30', label: '8:30' },
+  { value: '12h', label: '12:00' },
+  { value: '17h', label: '17:00' },
+  { value: '18h30', label: '18:30' },
+  { value: '20h', label: '20:00' },
 ];
 
 const Profile: React.FC = () => {
-  const [name, setName] = useState(userData.name);
-  const [email, setEmail] = useState(userData.email);
-  const [phone, setPhone] = useState(userData.phone);
-  const [preferredDays, setPreferredDays] = useState<string[]>(userData.preferredDays);
-  const [preferredTimes, setPreferredTimes] = useState<string[]>(userData.preferredTimes);
-  const [isLoading, setIsLoading] = useState(false);
+  const { user, session, updateProfile, signOut, isLoading } = useAuth();
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [preferredDays, setPreferredDays] = useState<string[]>([]);
+  const [preferredTimes, setPreferredTimes] = useState<string[]>([]);
+  const [avatar, setAvatar] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      const metadata = user.user_metadata;
+      setName(metadata?.full_name || '');
+      setEmail(user.email || '');
+      setAvatar(metadata?.avatar_url || null);
+      
+      // Extrair dias preferidos
+      if (metadata?.preferred_days) {
+        const days = Array.isArray(metadata.preferred_days) 
+          ? metadata.preferred_days 
+          : metadata.preferred_days.split(',');
+        setPreferredDays(days);
+      }
+      
+      // Extrair horários preferidos
+      if (metadata?.preferred_times) {
+        const times = Array.isArray(metadata.preferred_times) 
+          ? metadata.preferred_times 
+          : metadata.preferred_times.split(',');
+        setPreferredTimes(times);
+      }
+    }
+  }, [user]);
   
-  const handleSaveProfile = () => {
-    setIsLoading(true);
+  const handleSaveProfile = async () => {
+    setIsSaving(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      // Show success message
-      console.log('Perfil atualizado com sucesso!');
-    }, 1000);
+    try {
+      await updateProfile({
+        name,
+        avatar_url: avatar,
+        preferredDays,
+        preferredTimes,
+      });
+    } catch (error) {
+      console.error('Erro ao atualizar perfil:', error);
+    } finally {
+      setIsSaving(false);
+    }
   };
   
   const toggleDay = (day: string) => {
@@ -67,6 +92,39 @@ const Profile: React.FC = () => {
     }
   };
 
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Verificar tamanho do arquivo (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('A imagem deve ter no máximo 5MB');
+      return;
+    }
+
+    // Verificar tipo de arquivo
+    if (!['image/jpeg', 'image/png'].includes(file.type)) {
+      alert('Apenas imagens JPG e PNG são aceitas');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setAvatar(event.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="flex justify-center items-center h-[60vh]">
+          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary"></div>
+        </div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
       <div className="max-w-md mx-auto">
@@ -75,10 +133,16 @@ const Profile: React.FC = () => {
         {/* Profile picture */}
         <div className="flex justify-center mb-6">
           <div className="relative">
-            <UserAvatar name={name} size="lg" />
-            <button className="absolute -bottom-1 -right-1 bg-primary text-primary-foreground p-1.5 rounded-full shadow-sm">
+            <UserAvatar name={name} imageUrl={avatar} size="lg" />
+            <label className="absolute -bottom-1 -right-1 bg-primary text-primary-foreground p-1.5 rounded-full shadow-sm cursor-pointer">
               <Camera size={14} />
-            </button>
+              <input 
+                type="file" 
+                className="hidden" 
+                accept="image/jpeg, image/png"
+                onChange={handleAvatarChange}
+              />
+            </label>
           </div>
         </div>
         
@@ -117,12 +181,12 @@ const Profile: React.FC = () => {
                   id="email"
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10 w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                  readOnly
+                  className="pl-10 w-full h-10 rounded-lg border border-input bg-background/50 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary cursor-not-allowed"
                   placeholder="seu@email.com"
-                  required
                 />
               </div>
+              <p className="mt-1 text-xs text-muted-foreground">O email não pode ser alterado</p>
             </div>
             
             <div>
@@ -140,7 +204,6 @@ const Profile: React.FC = () => {
                   onChange={(e) => setPhone(e.target.value)}
                   className="pl-10 w-full h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                   placeholder="(00) 00000-0000"
-                  required
                 />
               </div>
             </div>
@@ -165,6 +228,7 @@ const Profile: React.FC = () => {
                     ? 'bg-primary text-primary-foreground border-primary' 
                     : 'bg-secondary text-secondary-foreground border-secondary hover:bg-secondary/80'}
                 `}
+                type="button"
               >
                 {day.label}
               </button>
@@ -187,6 +251,7 @@ const Profile: React.FC = () => {
                     ? 'bg-primary text-primary-foreground border-primary' 
                     : 'bg-secondary text-secondary-foreground border-secondary hover:bg-secondary/80'}
                 `}
+                type="button"
               >
                 {time.label}
               </button>
@@ -199,7 +264,7 @@ const Profile: React.FC = () => {
           <Button 
             variant="primary" 
             size="lg"
-            isLoading={isLoading}
+            isLoading={isSaving}
             leftIcon={<Save size={18} />}
             onClick={handleSaveProfile}
           >
@@ -209,7 +274,7 @@ const Profile: React.FC = () => {
           <Button 
             variant="ghost" 
             leftIcon={<LogOut size={18} />}
-            onClick={() => {}}
+            onClick={signOut}
           >
             Sair da Conta
           </Button>

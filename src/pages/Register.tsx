@@ -1,10 +1,10 @@
 
 import React, { useState, useRef } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Input } from '../components/ui/input';
 import Button from '../components/Button';
-import { useToast } from '@/hooks/use-toast';
-import { CheckCircle, User, Mail, Lock, Calendar, Clock, Camera, Upload, X, Check, ChevronLeft } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { CheckCircle, User, Mail, Lock, Calendar, Clock, Camera, X, Check, ChevronLeft } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
@@ -59,13 +59,11 @@ const registerSchema = z.object({
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
 const Register: React.FC = () => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const navigate = useNavigate();
-  const { toast } = useToast();
+  const { signUp, isLoading } = useAuth();
 
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -86,20 +84,18 @@ const Register: React.FC = () => {
 
     // Verificar tamanho do arquivo (5MB)
     if (file.size > 5 * 1024 * 1024) {
-      toast({
-        title: "Erro no upload",
-        description: "A imagem deve ter no máximo 5MB",
-        variant: "destructive",
+      form.setError("root", {
+        type: "manual",
+        message: "A imagem deve ter no máximo 5MB"
       });
       return;
     }
 
     // Verificar tipo de arquivo
     if (!['image/jpeg', 'image/png'].includes(file.type)) {
-      toast({
-        title: "Formato inválido",
-        description: "Apenas imagens JPG e PNG são aceitas",
-        variant: "destructive",
+      form.setError("root", {
+        type: "manual",
+        message: "Apenas imagens JPG e PNG são aceitas"
       });
       return;
     }
@@ -111,27 +107,21 @@ const Register: React.FC = () => {
     reader.readAsDataURL(file);
   };
 
-  const onSubmit = (data: RegisterFormValues) => {
-    setIsSubmitting(true);
-
-    // Simular envio para API
-    console.log("Dados de cadastro:", {
-      ...data,
-      profileImage: profileImage || 'default-avatar.png'
-    });
-
-    // Simular delay de API
-    setTimeout(() => {
-      setIsSubmitting(false);
-      
-      toast({
-        title: "Cadastro realizado com sucesso!",
-        description: "Bem-vindo ao Futvôlei App.",
+  const onSubmit = async (data: RegisterFormValues) => {
+    try {
+      // Passar os dados para o AuthContext
+      await signUp(data.email, data.password, {
+        fullName: data.fullName,
+        profileImage,
+        preferredDays: data.preferredDays,
+        preferredTimes: data.preferredTimes
       });
-
-      // Navegar para tela de confirmação ou login
-      navigate('/login');
-    }, 1500);
+      
+      // Redirecionamento é feito no AuthContext após o cadastro bem-sucedido
+    } catch (error) {
+      // Erros são tratados no AuthContext
+      console.error("Erro ao cadastrar:", error);
+    }
   };
 
   return (
@@ -539,7 +529,7 @@ const Register: React.FC = () => {
                 type="submit" 
                 fullWidth 
                 size="lg" 
-                isLoading={isSubmitting}
+                isLoading={isLoading}
                 rightIcon={<CheckCircle size={18} />}
               >
                 Criar Conta

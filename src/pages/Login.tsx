@@ -1,16 +1,21 @@
 
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import Button from '../components/Button';
 import { Input } from '../components/ui/input';
+import { useAuth } from '@/contexts/AuthContext';
 import { ChevronRight, User, Key } from 'lucide-react';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const { signIn, isLoading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Redirecionar para a página de origem se houver
+  const from = location.state?.from?.pathname || '/';
 
   const validateForm = () => {
     const newErrors: { email?: string; password?: string } = {};
@@ -33,18 +38,17 @@ const Login: React.FC = () => {
     return isValid;
   };
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!validateForm()) return;
     
-    setIsLoading(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      navigate('/');
-    }, 1000);
+    try {
+      await signIn(email, password);
+      // Redirecionamento é feito pelo AuthContext após login bem-sucedido
+    } catch (error) {
+      // Erros são tratados no AuthContext
+    }
   };
 
   return (
@@ -77,6 +81,7 @@ const Login: React.FC = () => {
                   placeholder="seu@email.com"
                   error={!!errors.email}
                   required
+                  autoComplete="email"
                 />
                 {errors.email && (
                   <p className="mt-1 text-sm text-destructive font-medium">{errors.email}</p>
@@ -101,6 +106,7 @@ const Login: React.FC = () => {
                   placeholder="••••••••"
                   error={!!errors.password}
                   required
+                  autoComplete="current-password"
                 />
                 {errors.password && (
                   <p className="mt-1 text-sm text-destructive font-medium">{errors.password}</p>
