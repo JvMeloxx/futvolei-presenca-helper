@@ -1,8 +1,31 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import ClassCard from '../components/ClassCard';
 import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+
+// Map of weekdays
+const weekdayMap = {
+  'Domingo': 0,
+  'Segunda': 1,
+  'Terça': 2,
+  'Quarta': 3,
+  'Quinta': 4,
+  'Sexta': 5,
+  'Sábado': 6
+};
+
+// Reverse map for display
+const reverseWeekdayMap = {
+  0: 'Domingo',
+  1: 'Segunda',
+  2: 'Terça',
+  3: 'Quarta',
+  4: 'Quinta',
+  5: 'Sexta',
+  6: 'Sábado'
+};
 
 // Mock data for weekdays and classes
 const weekDays = [
@@ -47,9 +70,47 @@ const classesByDay = {
   ],
 };
 
+// Map day names to classesByDay keys
+const dayToClassesMap: {[key: string]: string} = {
+  'Segunda': 'monday',
+  'Terça': 'tuesday',
+  'Quarta': 'wednesday',
+  'Quinta': 'thursday',
+};
+
 const Schedule: React.FC = () => {
-  const [selectedDay, setSelectedDay] = useState('monday');
+  const { user } = useAuth();
+  const [selectedDay, setSelectedDay] = useState('');
   const [currentWeek, setCurrentWeek] = useState(0);
+  
+  useEffect(() => {
+    // Set the selected day to the current day or first day with classes
+    const today = new Date().getDay(); // 0 = Sunday, 1 = Monday, etc.
+    const adjustedToday = today === 0 ? 6 : today - 1; // Convert to 0 = Monday
+    
+    // Find the corresponding day value
+    const todayValue = weekDays[adjustedToday]?.value;
+    
+    // Check if today has classes
+    if (todayValue && weekDays[adjustedToday]?.hasClasses) {
+      setSelectedDay(todayValue);
+    } else {
+      // Find the next day with classes
+      const nextDayWithClasses = weekDays.find((day, index) => 
+        index >= adjustedToday && day.hasClasses
+      );
+      
+      if (nextDayWithClasses) {
+        setSelectedDay(nextDayWithClasses.value);
+      } else {
+        // If no days after today have classes, select the first day with classes
+        const firstDayWithClasses = weekDays.find(day => day.hasClasses);
+        if (firstDayWithClasses) {
+          setSelectedDay(firstDayWithClasses.value);
+        }
+      }
+    }
+  }, []);
   
   const getCurrentDate = (dayOffset: number) => {
     const date = new Date();
@@ -91,6 +152,14 @@ const Schedule: React.FC = () => {
   
   const selectedDayClasses = classesByDay[selectedDay as keyof typeof classesByDay] || [];
 
+  // Get user preferred days for highlighting
+  const userPreferredDays = user?.user_metadata?.preferred_days || [];
+  
+  // Convert preferred days to day values
+  const preferredDayValues = userPreferredDays.map((day: string) => 
+    weekDays.find(d => d.name === day)?.value
+  ).filter(Boolean);
+
   return (
     <Layout>
       <div className="max-w-md mx-auto">
@@ -101,8 +170,9 @@ const Schedule: React.FC = () => {
             <button 
               onClick={handlePrevWeek}
               className="p-2 rounded-full hover:bg-secondary text-foreground"
+              disabled={currentWeek < 0}
             >
-              <ChevronLeft size={20} />
+              <ChevronLeft size={20} className={currentWeek < 0 ? "text-muted-foreground" : ""} />
             </button>
             <span className="text-sm font-medium">
               {currentWeek === 0 ? 'Esta semana' : 
@@ -125,22 +195,28 @@ const Schedule: React.FC = () => {
               const dayDate = getCurrentDate(index);
               const today = isToday(index);
               const pastDay = isPastDay(index);
+              const isPreferredDay = preferredDayValues.includes(day.value);
               
               return (
                 <button
                   key={day.value}
-                  onClick={() => day.hasClasses && setSelectedDay(day.value)}
+                  onClick={() => day.hasClasses && !pastDay && setSelectedDay(day.value)}
                   disabled={!day.hasClasses || pastDay}
                   className={`
-                    flex flex-col items-center justify-center p-2 rounded-xl
+                    flex flex-col items-center justify-center p-2 rounded-xl relative
                     ${selectedDay === day.value ? 'bg-primary text-primary-foreground' : ''}
                     ${today && selectedDay !== day.value ? 'bg-secondary text-secondary-foreground' : ''}
+                    ${isPreferredDay && !selectedDay && !today ? 'bg-primary/20' : ''}
                     ${!day.hasClasses || pastDay ? 'opacity-50 cursor-not-allowed' : 'hover:bg-secondary/50 cursor-pointer'}
                     transition-all duration-200
                   `}
                 >
                   <span className="text-xs font-medium">{day.name.substring(0, 3)}</span>
                   <span className={`text-lg ${today ? 'font-bold' : 'font-medium'}`}>{dayDate}</span>
+                  
+                  {isPreferredDay && (
+                    <span className="absolute bottom-0.5 h-1 w-1 rounded-full bg-primary"></span>
+                  )}
                 </button>
               );
             })}
@@ -161,18 +237,24 @@ const Schedule: React.FC = () => {
           
           {selectedDayClasses.length > 0 ? (
             <div className="grid grid-cols-1 gap-4">
-              {selectedDayClasses.map((classItem, index) => (
-                <div key={classItem.id} className="staggered-item">
-                  <ClassCard 
-                    id={classItem.id}
-                    day={weekDays.find(d => d.value === selectedDay)?.name || ''}
-                    date={`${getCurrentDate(weekDays.findIndex(d => d.value === selectedDay))} ${getMonthName()}`}
-                    time={classItem.time}
-                    confirmedCount={classItem.confirmedCount}
-                    isPast={false}
-                  />
-                </div>
-              ))}
+              {selectedDayClasses.map((classItem, index) => {
+                const dayName = weekDays.find(d => d.value === selectedDay)?.name || '';
+                const isUserPreferredTime = user?.user_metadata?.preferred_times?.includes(classItem.time.replace(':', 'h'));
+                
+                return (
+                  <div key={classItem.id} className="staggered-item">
+                    <ClassCard 
+                      id={classItem.id}
+                      day={dayName}
+                      date={`${getCurrentDate(weekDays.findIndex(d => d.value === selectedDay))} ${getMonthName()}`}
+                      time={classItem.time}
+                      confirmedCount={classItem.confirmedCount}
+                      isPast={false}
+                      isSelected={isUserPreferredTime}
+                    />
+                  </div>
+                );
+              })}
             </div>
           ) : (
             <div className="text-center py-8 text-muted-foreground">
