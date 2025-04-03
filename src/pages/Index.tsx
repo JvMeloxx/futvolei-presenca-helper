@@ -5,7 +5,7 @@ import Layout from '../components/Layout';
 import ClassCard from '../components/ClassCard';
 import UserAvatar from '../components/UserAvatar';
 import Button from '../components/Button';
-import { Calendar, ChevronRight, Clock } from 'lucide-react';
+import { Calendar, ChevronRight, Clock, Check } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -203,6 +203,13 @@ const Index: React.FC = () => {
     minute: '2-digit',
   }).format(currentTime);
 
+  // New handler specifically for the Next Class Confirmation button
+  const handleConfirmNextClass = () => {
+    if (!nextClass) return;
+    
+    handleConfirmClass(nextClass.id, nextClass.day, nextClass.date, nextClass.time);
+  };
+
   return (
     <Layout>
       <div className="max-w-md mx-auto">
@@ -265,9 +272,22 @@ const Index: React.FC = () => {
             </div>
           )}
           
+          {/* New confirm presence button for next class */}
+          {nextClass && (
+            <Button
+              variant="primary"
+              fullWidth
+              leftIcon={<Check size={18} />}
+              className="mt-4 bg-primary border-2 border-white shadow-lg shadow-black/30 hover:translate-y-[-2px] active:translate-y-[1px] transition-all duration-300 font-bold uppercase"
+              onClick={handleConfirmNextClass}
+            >
+              Confirmar Presença
+            </Button>
+          )}
+          
           <Link 
             to="/schedule" 
-            className="flex items-center justify-center text-sm text-primary font-medium"
+            className="flex items-center justify-center text-sm text-primary font-medium mt-4"
           >
             <Calendar size={14} className="mr-1" />
             Ver agenda completa
