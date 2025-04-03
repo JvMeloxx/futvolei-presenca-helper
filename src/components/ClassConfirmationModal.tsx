@@ -4,7 +4,6 @@ import { Check, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import Button from './Button';
 import { Textarea } from '@/components/ui/textarea';
-import { supabase } from '@/integrations/supabase/client';
 import { toggleClassConfirmation } from '@/models/ClassConfirmation';
 import { useToast } from '@/hooks/use-toast';
 
@@ -38,18 +37,6 @@ const ClassConfirmationModal: React.FC<ClassConfirmationModalProps> = ({
   const handleConfirm = async () => {
     try {
       setIsSubmitting(true);
-      
-      // Check if user is logged in
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast({
-          title: "Autenticação necessária",
-          description: "Faça login para confirmar sua presença.",
-          variant: "destructive"
-        });
-        onClose();
-        return;
-      }
       
       // If it's not a preferred day, validate replacement reason
       if (!isPreferredDay && !replacementReason.trim()) {

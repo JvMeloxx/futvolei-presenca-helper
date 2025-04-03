@@ -9,6 +9,65 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      class_confirmations: {
+        Row: {
+          class_id: string
+          created_at: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          class_id: string
+          created_at?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          class_id?: string
+          created_at?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_confirmations_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      classes: {
+        Row: {
+          created_at: string | null
+          day: string
+          id: string
+          instructor: string
+          location: string
+          max_participants: number
+          time: string
+        }
+        Insert: {
+          created_at?: string | null
+          day: string
+          id: string
+          instructor: string
+          location: string
+          max_participants?: number
+          time: string
+        }
+        Update: {
+          created_at?: string | null
+          day?: string
+          id?: string
+          instructor?: string
+          location?: string
+          max_participants?: number
+          time?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -44,7 +103,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_class_confirmation_count: {
+        Args: {
+          class_id: string
+        }
+        Returns: number
+      }
+      has_user_confirmed_class: {
+        Args: {
+          user_id: string
+          class_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

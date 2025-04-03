@@ -1,8 +1,5 @@
-
 import React from 'react';
-import { ChevronRight, Clock, Check, Calendar } from 'lucide-react';
-import Button from '../Button';
-import { Link } from 'react-router-dom';
+import { Calendar, Clock, MapPin } from 'lucide-react';
 
 interface NextClassCardProps {
   nextClass: any | null;
@@ -11,83 +8,76 @@ interface NextClassCardProps {
   onViewClass: () => void;
 }
 
-const NextClassCard: React.FC<NextClassCardProps> = ({
-  nextClass,
-  currentTime,
-  onConfirm,
-  onViewClass,
-}) => {
-  const formattedTime = new Intl.DateTimeFormat('pt-BR', {
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(currentTime);
+const NextClassCard: React.FC<NextClassCardProps> = ({ nextClass, currentTime, onConfirm, onViewClass }) => {
+  const now = currentTime;
+  const classTime = nextClass ? new Date(`${now.toDateString()} ${nextClass.time}`) : null;
+  const timeDiff = classTime ? classTime.getTime() - now.getTime() : 0;
+  const hours = Math.max(0, Math.floor(timeDiff / (1000 * 60 * 60)));
+  const minutes = Math.max(0, Math.floor((timeDiff / (1000 * 60)) % 60));
+
+  if (!nextClass) {
+    return (
+      <div className="mb-6">
+        <h2 className="text-lg font-semibold mb-4">Próxima Aula</h2>
+        <div className="glass-effect rounded-2xl p-6 text-center text-muted-foreground">
+          <p>Nenhuma aula agendada</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="glass-effect rounded-2xl p-5 mb-6">
-      <div className="flex justify-between items-start mb-4">
+    <div className="mb-6">
+      <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-semibold">Próxima Aula</h2>
-        <div className="flex items-center text-sm text-muted-foreground">
-          <Clock size={14} className="mr-1" />
-          <span>{formattedTime}</span>
-        </div>
+        {nextClass && (
+          <span className="text-sm text-muted-foreground">
+            {hours > 0 ? `Em ${hours}h ${minutes}min` : `Em ${minutes} minutos`}
+          </span>
+        )}
       </div>
       
       {nextClass ? (
-        <div className="bg-secondary rounded-xl p-4 mb-4">
-          <div className="flex justify-between items-center">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">{nextClass.day}, {nextClass.date}</p>
-              <h3 className="text-lg font-semibold">{nextClass.time}</h3>
+        <div>
+          <div className="glass-effect rounded-2xl overflow-hidden">
+            <div className="p-4">
+              <h3 className="font-semibold text-lg">{nextClass.day}</h3>
+              <div className="flex items-center text-muted-foreground mt-1">
+                <Calendar className="mr-2 h-4 w-4" />
+                <span>{nextClass.date}</span>
+              </div>
+              <div className="flex items-center text-muted-foreground mt-1">
+                <Clock className="mr-2 h-4 w-4" />
+                <span>{nextClass.time}</span>
+              </div>
+              <div className="flex items-center text-muted-foreground mt-1">
+                <MapPin className="mr-2 h-4 w-4" />
+                <span>Quadra Central</span>
+              </div>
             </div>
-            <Button 
-              variant="primary" 
-              size="sm"
-              rightIcon={<ChevronRight size={16} />}
-              onClick={onViewClass}
-            >
-              Confirmar
-            </Button>
+            
+            {/* Add Confirmation Button */}
+            <div className="p-4 pt-0">
+              <button
+                onClick={onConfirm}
+                className="confirmar-btn-proximaaula bg-primary text-white border-2 border-white rounded-lg py-3 px-6 text-base font-bold uppercase mt-4 w-full shadow-md transition-all duration-300 hover:bg-primary/90 hover:transform hover:-translate-y-1 active:translate-y-0"
+              >
+                Confirmar Presença
+              </button>
+            </div>
+          </div>
+          
+          <div className="mt-3 text-center text-muted-foreground">
+            <button onClick={onViewClass} className="text-sm text-primary font-medium">
+              Ver detalhes
+            </button>
           </div>
         </div>
       ) : (
-        <div className="bg-secondary rounded-xl p-4 mb-4">
-          <div className="flex justify-between items-center">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Sem aulas próximas</p>
-              <h3 className="text-lg font-semibold">Verifique a agenda</h3>
-            </div>
-            <Button 
-              variant="primary" 
-              size="sm"
-              rightIcon={<ChevronRight size={16} />}
-              onClick={onViewClass}
-            >
-              Ver agenda
-            </Button>
-          </div>
+        <div className="glass-effect rounded-2xl p-6 text-center text-muted-foreground">
+          <p>Nenhuma aula agendada</p>
         </div>
       )}
-      
-      {/* Confirm presence button for next class */}
-      {nextClass && (
-        <Button
-          variant="primary"
-          fullWidth
-          leftIcon={<Check size={18} />}
-          className="mt-4 bg-primary border-2 border-white shadow-lg shadow-black/30 hover:translate-y-[-2px] active:translate-y-[1px] transition-all duration-300 font-bold uppercase"
-          onClick={onConfirm}
-        >
-          Confirmar Presença
-        </Button>
-      )}
-      
-      <Link 
-        to="/schedule" 
-        className="flex items-center justify-center text-sm text-primary font-medium mt-4"
-      >
-        <Calendar size={14} className="mr-1" />
-        Ver agenda completa
-      </Link>
     </div>
   );
 };

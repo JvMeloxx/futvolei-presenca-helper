@@ -5,36 +5,55 @@ import { ClassDetails, ClassParticipant } from '@/models/ClassConfirmation';
 // Fetch class details by ID
 export const fetchClassById = async (classId: string): Promise<ClassDetails | null> => {
   try {
-    // Mock data for now since we don't have the actual classes table
-    // In a real implementation, this would fetch from the database
-    const mockClasses: Record<string, Omit<ClassDetails, 'id' | 'user_confirmed' | 'confirmed_count'>> = {
-      'm1': { day: 'Segunda', time: '8:30', date: '15 Mar', location: 'Arena Beach', instructor: 'Roberto', max_participants: 12 },
-      'm2': { day: 'Segunda', time: '17:00', date: '15 Mar', location: 'Arena Beach', instructor: 'Carlos', max_participants: 12 },
-      't1': { day: 'Terça', time: '6:30', date: '16 Mar', location: 'Arena Beach', instructor: 'Roberto', max_participants: 10 },
-      'w1': { day: 'Quarta', time: '8:30', date: '17 Mar', location: 'Arena Beach', instructor: 'Carlos', max_participants: 12 },
-    };
+    // Get class information
+    const { data: classData, error: classError } = await supabase
+      .from('classes')
+      .select('*')
+      .eq('id', classId)
+      .single();
     
-    if (!mockClasses[classId]) return null;
+    if (classError || !classData) {
+      console.error("Error fetching class:", classError);
+      return null;
+    }
     
     // Get confirmation count
+    const { data: countData, error: countError } = await supabase
+      .rpc('get_class_confirmation_count', { class_id: classId });
+    
+    if (countError) {
+      console.error("Error getting confirmation count:", countError);
+      return null;
+    }
+    
     // Check if current user has confirmed
     const { data: { user } } = await supabase.auth.getUser();
+    let userConfirmed = false;
     
-    // For now, just return mock data
-    // In a real implementation, we would check the database
-    const mockClass = mockClasses[classId];
-    const confirmedCount = Math.floor(Math.random() * 10) + 1;
-    const userConfirmed = user ? Math.random() > 0.5 : false;
+    if (user) {
+      const { data: isConfirmed, error: confirmError } = await supabase
+        .rpc('has_user_confirmed_class', { 
+          user_id: user.id, 
+          class_id: classId 
+        });
+      
+      if (!confirmError) {
+        userConfirmed = isConfirmed || false;
+      }
+    }
+    
+    // Calculate date from day
+    const date = calculateNextDateFromDay(classData.day);
     
     return {
-      id: classId,
-      day: mockClass.day,
-      time: mockClass.time,
-      date: mockClass.date,
-      location: mockClass.location,
-      instructor: mockClass.instructor,
-      max_participants: mockClass.max_participants,
-      confirmed_count: confirmedCount,
+      id: classData.id,
+      day: classData.day,
+      time: classData.time,
+      date: date,
+      location: classData.location,
+      instructor: classData.instructor,
+      max_participants: classData.max_participants,
+      confirmed_count: countData || 0,
       user_confirmed: userConfirmed
     };
   } catch (error) {
@@ -46,22 +65,33 @@ export const fetchClassById = async (classId: string): Promise<ClassDetails | nu
 // Fetch class participants
 export const fetchClassParticipants = async (classId: string): Promise<ClassParticipant[]> => {
   try {
-    // For now, return mock data
-    // In a real implementation, this would fetch from the database
-    const mockParticipants: ClassParticipant[] = Array(Math.floor(Math.random() * 10) + 1)
-      .fill(0)
-      .map((_, i) => ({
-        id: `p${i}`,
-        user_id: `u${i}`,
-        class_id: classId,
-        created_at: new Date().toISOString(),
-        user_details: {
-          full_name: `Participante ${i + 1}`,
-          avatar_url: null
-        }
-      }));
+    const { data, error } = await supabase
+      .from('class_confirmations')
+      .select(`
+        id,
+        user_id,
+        class_id,
+        created_at,
+        profiles:profiles!inner(full_name, avatar_url)
+      `)
+      .eq('class_id', classId)
+      .order('created_at');
     
-    return mockParticipants;
+    if (error) {
+      console.error("Error fetching participants:", error);
+      return [];
+    }
+    
+    return data.map(item => ({
+      id: item.id,
+      user_id: item.user_id,
+      class_id: item.class_id,
+      created_at: item.created_at,
+      user_details: {
+        full_name: item.profiles.full_name || 'Usuário',
+        avatar_url: item.profiles.avatar_url
+      }
+    }));
   } catch (error) {
     console.error("Error fetching participants:", error);
     return [];
@@ -74,11 +104,33 @@ export const toggleClassConfirmation = async (classId: string, confirmed: boolea
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return false;
     
-    // For now, just simulate success
-    // In a real implementation, this would update the database
-    console.log(`User ${user.id} ${confirmed ? 'confirmed' : 'canceled'} class ${classId}`);
+    if (confirmed) {
+      // Add confirmation
+      const { error } = await supabase
+        .from('class_confirmations')
+        .insert({
+          user_id: user.id,
+          class_id: classId
+        });
+      
+      if (error) {
+        console.error("Error confirming class:", error);
+        return false;
+      }
+    } else {
+      // Remove confirmation
+      const { error } = await supabase
+        .from('class_confirmations')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('class_id', classId);
+      
+      if (error) {
+        console.error("Error canceling class confirmation:", error);
+        return false;
+      }
+    }
     
-    // Mock successful response
     return true;
   } catch (error) {
     console.error("Error toggling confirmation:", error);
@@ -89,7 +141,7 @@ export const toggleClassConfirmation = async (classId: string, confirmed: boolea
 // Find the next class based on user preferences
 export const findNextClass = (
   preferredDays: string[], 
-  allClasses: Record<string, any[]>
+  classesByDay: Record<string, any[]>
 ): { id: string; day: string; date: string; time: string; confirmedCount: number } | null => {
   try {
     if (!preferredDays.length) return null;
@@ -146,10 +198,10 @@ export const findNextClass = (
       'Domingo': 'sunday'
     }).find(([key]) => key === nextDay)?.[1];
     
-    if (!classKey || !allClasses[classKey]) return null;
+    if (!classKey || !classesByDay[classKey]) return null;
     
     // Get the first class of the day
-    const nextClass = allClasses[classKey][0];
+    const nextClass = classesByDay[classKey][0];
     if (!nextClass) return null;
     
     // Calculate the date for the next class
@@ -170,4 +222,34 @@ export const findNextClass = (
     console.error("Error finding next class:", error);
     return null;
   }
+};
+
+// Helper function to calculate the next date for a specific day
+const calculateNextDateFromDay = (dayName: string): string => {
+  const today = new Date();
+  const currentDayIndex = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
+  
+  // Map to convert day names to indexes
+  const dayToIndexMap: Record<string, number> = {
+    'Domingo': 0,
+    'Segunda': 1,
+    'Terça': 2,
+    'Quarta': 3, 
+    'Quinta': 4,
+    'Sexta': 5,
+    'Sábado': 6
+  };
+  
+  const targetDayIndex = dayToIndexMap[dayName];
+  if (targetDayIndex === undefined) return '';
+  
+  let daysToAdd = targetDayIndex - currentDayIndex;
+  if (daysToAdd <= 0) {
+    daysToAdd += 7; // Move to next week
+  }
+  
+  const nextDate = new Date(today);
+  nextDate.setDate(today.getDate() + daysToAdd);
+  
+  return `${nextDate.getDate()} ${new Intl.DateTimeFormat('pt-BR', { month: 'short' }).format(nextDate)}`;
 };
