@@ -10,7 +10,15 @@ interface NextClassCardProps {
 
 const NextClassCard: React.FC<NextClassCardProps> = ({ nextClass, currentTime, onConfirm, onViewClass }) => {
   const now = currentTime;
-  const classTime = nextClass ? new Date(`${now.toDateString()} ${nextClass.time}`) : null;
+  
+  // Criar data/hora da aula de forma mais segura
+  const classTime = nextClass ? (() => {
+    const [hours, minutes] = nextClass.time.split(':').map(Number);
+    const classDateTime = new Date(now);
+    classDateTime.setHours(hours, minutes, 0, 0);
+    return classDateTime;
+  })() : null;
+  
   const timeDiff = classTime ? classTime.getTime() - now.getTime() : 0;
   const hours = Math.max(0, Math.floor(timeDiff / (1000 * 60 * 60)));
   const minutes = Math.max(0, Math.floor((timeDiff / (1000 * 60)) % 60));

@@ -46,17 +46,28 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
 
   return (
     <AlertDialog open={isOpen} onOpenChange={onClose}>
-      <AlertDialogContent>
+      <AlertDialogContent className="transition-all duration-300 ease-out">
         <AlertDialogHeader>
-          <AlertDialogTitle>{title}</AlertDialogTitle>
-          <AlertDialogDescription>{description}</AlertDialogDescription>
+          <AlertDialogTitle className="animate-in slide-in-from-top-2 duration-300">
+            {title}
+          </AlertDialogTitle>
+          <AlertDialogDescription className="animate-in slide-in-from-top-2 duration-300 delay-75">
+            {description}
+          </AlertDialogDescription>
         </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel disabled={loading}>{cancelText}</AlertDialogCancel>
+        <AlertDialogFooter className="animate-in slide-in-from-bottom-2 duration-300 delay-150">
+          <AlertDialogCancel 
+            onClick={onClose} 
+            disabled={loading}
+            className="transition-all duration-200 hover:scale-105 active:scale-95"
+          >
+            {cancelText}
+          </AlertDialogCancel>
           <LoadingButton
-            loading={loading}
             onClick={handleConfirm}
+            loading={loading}
             variant={variant === 'destructive' ? 'destructive' : 'default'}
+            className="transition-all duration-200 hover:scale-105 active:scale-95"
           >
             {confirmText}
           </LoadingButton>

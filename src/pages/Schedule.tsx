@@ -11,6 +11,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
+import { ClassListSkeleton } from '@/components/ui/skeleton';
 
 // Map of weekdays
 const weekdayMap = {
@@ -90,6 +91,7 @@ const Schedule: React.FC = () => {
   const [selectedDay, setSelectedDay] = useState('');
   const [selectedClass, setSelectedClass] = useState<any>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   
   // Function to generate current week dates
   const generateCurrentWeekDates = () => {
@@ -119,6 +121,11 @@ const Schedule: React.FC = () => {
   const weekDaysWithDates = generateCurrentWeekDates();
   
   useEffect(() => {
+    // Simulate loading time
+    const loadingTimer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1500);
+
     // Set the selected day to the current day or first day with classes
     const today = new Date().getDay(); // 0 = Sunday, 1 = Monday, etc.
     const adjustedToday = today === 0 ? 6 : today - 1; // Convert to 0 = Monday
@@ -145,6 +152,8 @@ const Schedule: React.FC = () => {
         }
       }
     }
+
+    return () => clearTimeout(loadingTimer);
   }, []);
   
   const getMonthName = () => {
@@ -235,48 +244,60 @@ const Schedule: React.FC = () => {
           </div>
           
           {selectedDayClasses.length > 0 ? (
-            <div className="grid grid-cols-1 gap-4">
-              {selectedDayClasses.map((classItem, index) => {
-                const dayName = weekDays.find(d => d.value === selectedDay)?.name || '';
-                const dayDate = weekDaysWithDates.find(d => d.value === selectedDay)?.dayOfMonth || '';
-                
-                // Also fix here for preferred times
-                const userPreferredTimes = user?.user_metadata?.preferred_times || [];
-                let preferredTimesArray: string[] = [];
-                
-                if (userPreferredTimes) {
-                  if (Array.isArray(userPreferredTimes)) {
-                    preferredTimesArray = userPreferredTimes;
-                  } else if (typeof userPreferredTimes === 'string') {
-                    preferredTimesArray = userPreferredTimes.split(',');
+            isLoading ? (
+              <ClassListSkeleton count={4} />
+            ) : (
+              <div className="grid grid-cols-1 gap-4 animate-in fade-in-0 duration-500">
+                {selectedDayClasses.map((classItem, index) => {
+                  const dayName = weekDays.find(d => d.value === selectedDay)?.name || '';
+                  const dayDate = weekDaysWithDates.find(d => d.value === selectedDay)?.dayOfMonth || '';
+                  
+                  // Also fix here for preferred times
+                  const userPreferredTimes = user?.user_metadata?.preferred_times || [];
+                  let preferredTimesArray: string[] = [];
+                  
+                  if (userPreferredTimes) {
+                    if (Array.isArray(userPreferredTimes)) {
+                      preferredTimesArray = userPreferredTimes;
+                    } else if (typeof userPreferredTimes === 'string') {
+                      preferredTimesArray = userPreferredTimes.split(',');
+                    }
                   }
-                }
-                
-                const isUserPreferredTime = preferredTimesArray.includes(classItem.time.replace(':', 'h'));
-                
-                return (
-                  <div key={classItem.id} className="staggered-item">
-                    <ClassCard 
-                      id={classItem.id}
-                      day={dayName}
-                      date={`${dayDate} ${getMonthName()}`}
-                      time={classItem.time}
-                      confirmedCount={classItem.confirmedCount}
-                      maxParticipants={classItem.maxCapacity}
-                      location={classItem.location}
-                      instructor={classItem.professor}
-                      isPast={false}
-                      isSelected={isUserPreferredTime}
-                      onClick={() => openClassDetails(classItem)}
-                    />
-                  </div>
-                );
-              })}
-            </div>
+                  
+                  const isUserPreferredTime = preferredTimesArray.includes(classItem.time.replace(':', 'h'));
+                  
+                  return (
+                    <div 
+                      key={classItem.id} 
+                      className="animate-in slide-in-from-bottom-4 duration-300"
+                      style={{ animationDelay: `${index * 100}ms` }}
+                    >
+                      <ClassCard 
+                        id={classItem.id}
+                        day={dayName}
+                        date={`${dayDate} ${getMonthName()}`}
+                        time={classItem.time}
+                        confirmedCount={classItem.confirmedCount}
+                        maxParticipants={classItem.maxCapacity}
+                        location={classItem.location}
+                        instructor={classItem.professor}
+                        isPast={false}
+                        isSelected={isUserPreferredTime}
+                        onClick={() => openClassDetails(classItem)}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            )
           ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              <p>Nenhuma aula disponível neste dia</p>
-            </div>
+            isLoading ? (
+              <ClassListSkeleton count={2} />
+            ) : (
+              <div className="text-center py-8 text-muted-foreground animate-in fade-in-0 duration-500">
+                <p>Nenhuma aula disponível neste dia</p>
+              </div>
+            )
           )}
         </div>
         

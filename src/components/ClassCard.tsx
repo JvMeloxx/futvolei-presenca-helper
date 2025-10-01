@@ -4,6 +4,7 @@ import { Clock, Users, MapPin, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { CapacityBadge, DateTimeBadge, LocationBadge } from '@/components/ui/status-badge';
 import { LoadingButton } from '@/components/ui/loading-spinner';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 
 interface ClassCardProps {
@@ -113,48 +114,126 @@ const ClassCard: React.FC<ClassCardProps> = ({
           <div className="space-y-2">
             {/* Badges informativos */}
             <div className="flex flex-wrap gap-2">
-              <DateTimeBadge date={date} time={time} variant="time" />
-              <CapacityBadge current={confirmedCount} max={maxParticipants} />
-              {location && <LocationBadge location={location} />}
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div>
+                      <DateTimeBadge date={date} time={time} variant="time" />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Horário da aula: {time}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div>
+                      <CapacityBadge current={confirmedCount} max={maxParticipants} />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{confirmedCount} de {maxParticipants} vagas preenchidas</p>
+                    {isFull && <p className="text-red-300">Aula lotada!</p>}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              
+              {location && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div>
+                        <LocationBadge location={location} />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Local: {location}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
             </div>
             
             {/* Instrutor */}
             {instructor && (
-              <div className="flex items-center text-sm text-primary-foreground/80">
-                <User size={14} className="mr-2 text-primary" />
-                <span>Prof. {instructor}</span>
-              </div>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center text-sm text-primary-foreground/80 cursor-help">
+                      <User size={14} className="mr-2 text-primary" />
+                      <span>Prof. {instructor}</span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Professor responsável pela aula</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             )}
             
             {/* Botões de ação */}
             {!isPast && (onConfirm || onCancel) && (
               <div className="flex gap-2 pt-2">
                 {!isConfirmed && onConfirm && !isFull && (
-                  <LoadingButton
-                    loading={loading}
-                    onClick={handleConfirm}
-                    variant="default"
-                    className="flex-1 text-sm"
-                  >
-                    Confirmar
-                  </LoadingButton>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="flex-1">
+                          <LoadingButton
+                            loading={loading}
+                            onClick={handleConfirm}
+                            variant="default"
+                            className="w-full text-sm"
+                          >
+                            Confirmar
+                          </LoadingButton>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Confirmar presença nesta aula</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 )}
                 
                 {isConfirmed && onCancel && (
-                  <LoadingButton
-                    loading={loading}
-                    onClick={handleCancel}
-                    variant="destructive"
-                    className="flex-1 text-sm"
-                  >
-                    Cancelar
-                  </LoadingButton>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="flex-1">
+                          <LoadingButton
+                            loading={loading}
+                            onClick={handleCancel}
+                            variant="destructive"
+                            className="w-full text-sm"
+                          >
+                            Cancelar
+                          </LoadingButton>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Cancelar confirmação de presença</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 )}
                 
                 {isFull && !isConfirmed && (
-                  <div className="flex-1 text-center text-sm text-muted-foreground py-2">
-                    Aula lotada
-                  </div>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="flex-1 text-center text-sm text-muted-foreground py-2 cursor-help">
+                          Aula lotada
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Esta aula atingiu o limite máximo de participantes</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 )}
               </div>
             )}
