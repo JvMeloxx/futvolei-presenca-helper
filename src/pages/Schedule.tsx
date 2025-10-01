@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import ClassCard from '../components/ClassCard';
 import { Calendar, Clock, MapPin, Users, Info } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/NeonAuthContext';
 import {
   Dialog,
   DialogContent,
@@ -262,6 +262,9 @@ const Schedule: React.FC = () => {
                       date={`${dayDate} ${getMonthName()}`}
                       time={classItem.time}
                       confirmedCount={classItem.confirmedCount}
+                      maxParticipants={classItem.maxCapacity}
+                      location={classItem.location}
+                      instructor={classItem.professor}
                       isPast={false}
                       isSelected={isUserPreferredTime}
                       onClick={() => openClassDetails(classItem)}
@@ -279,12 +282,12 @@ const Schedule: React.FC = () => {
         
         {/* Class Details Modal */}
         <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
-          <DialogContent className="glass-effect text-primary-foreground">
+          <DialogContent className="glass-effect text-foreground">
             <DialogHeader>
-              <DialogTitle className="text-xl text-primary-foreground">
+              <DialogTitle className="text-xl text-foreground">
                 Detalhes da Aula
               </DialogTitle>
-              <DialogDescription className="text-primary-foreground/80">
+              <DialogDescription className="text-foreground/80">
                 Informações completas sobre o horário selecionado
               </DialogDescription>
             </DialogHeader>

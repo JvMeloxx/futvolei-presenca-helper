@@ -2,9 +2,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import ClassCard from '../ClassCard';
+import { Star } from 'lucide-react';
 
 interface UpcomingClassesProps {
-  upcomingClasses: any[];
+  upcomingClasses: (any & { date?: string; isPreferredDay?: boolean; isPreferredTime?: boolean })[];
   onSelectClass: (classId: string, day: string, date: string, time: string) => void;
 }
 
@@ -25,10 +26,18 @@ const UpcomingClasses: React.FC<UpcomingClassesProps> = ({
         {upcomingClasses.length > 0 ? (
           upcomingClasses.map((classItem) => (
             <div key={classItem.id} className="staggered-item">
-              <ClassCard 
-                {...classItem} 
-                onClick={() => onSelectClass(classItem.id, classItem.day, classItem.date, classItem.time)}
-              />
+              <div className="relative">
+                {(classItem.isPreferredDay || classItem.isPreferredTime) && (
+                  <div className="absolute top-2 right-2 z-10 flex items-center gap-1 bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full text-xs font-medium">
+                    <Star className="h-3 w-3 fill-current" />
+                    Preferida
+                  </div>
+                )}
+                <ClassCard 
+                  {...classItem} 
+                  onClick={() => onSelectClass(classItem.id, classItem.day, classItem.date, classItem.time)}
+                />
+              </div>
             </div>
           ))
         ) : (

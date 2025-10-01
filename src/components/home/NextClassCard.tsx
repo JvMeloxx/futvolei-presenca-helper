@@ -1,8 +1,8 @@
 import React from 'react';
-import { Calendar, Clock, MapPin } from 'lucide-react';
+import { Calendar, Clock, MapPin, Star } from 'lucide-react';
 
 interface NextClassCardProps {
-  nextClass: any | null;
+  nextClass: (any & { date?: string; isPreferredDay?: boolean; isPreferredTime?: boolean }) | null;
   currentTime: Date;
   onConfirm: () => void;
   onViewClass: () => void;
@@ -41,7 +41,15 @@ const NextClassCard: React.FC<NextClassCardProps> = ({ nextClass, currentTime, o
         <div>
           <div className="glass-effect rounded-2xl overflow-hidden">
             <div className="p-4">
-              <h3 className="font-semibold text-lg">{nextClass.day}</h3>
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold text-lg">{nextClass.day}</h3>
+                {(nextClass.isPreferredDay || nextClass.isPreferredTime) && (
+                  <div className="flex items-center gap-1">
+                    <Star className="h-4 w-4 text-yellow-500 fill-current" />
+                    <span className="text-xs text-yellow-600 font-medium">Preferida</span>
+                  </div>
+                )}
+              </div>
               <div className="flex items-center text-muted-foreground mt-1">
                 <Calendar className="mr-2 h-4 w-4" />
                 <span>{nextClass.date}</span>
@@ -49,6 +57,9 @@ const NextClassCard: React.FC<NextClassCardProps> = ({ nextClass, currentTime, o
               <div className="flex items-center text-muted-foreground mt-1">
                 <Clock className="mr-2 h-4 w-4" />
                 <span>{nextClass.time}</span>
+                {nextClass.isPreferredTime && (
+                  <Star className="ml-2 h-3 w-3 text-yellow-500 fill-current" />
+                )}
               </div>
               <div className="flex items-center text-muted-foreground mt-1">
                 <MapPin className="mr-2 h-4 w-4" />

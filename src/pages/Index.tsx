@@ -6,8 +6,8 @@ import HomeHeader from '../components/home/HomeHeader';
 import NextClassCard from '../components/home/NextClassCard';
 import UpcomingClasses from '../components/home/UpcomingClasses';
 import ClassConfirmationModal from '@/components/ClassConfirmationModal';
-import { useAuth } from '@/contexts/AuthContext';
-import { useClassManagement } from '@/hooks/useClassManagement';
+import { useAuth } from '@/contexts/NeonAuthContext';
+import { useNeonClassManagement } from '@/hooks/useNeonClassManagement';
 
 // Class schedule by day (same data structure as in Schedule.tsx)
 const classesByDay = {
@@ -56,7 +56,7 @@ const Index: React.FC = () => {
     handleConfirmSuccess,
     handleCloseModal,
     currentTime
-  } = useClassManagement(classesByDay);
+  } = useNeonClassManagement();
 
   return (
     <Layout>
@@ -69,13 +69,16 @@ const Index: React.FC = () => {
           nextClass={nextClass} 
           currentTime={currentTime}
           onConfirm={handleConfirmNextClass}
-          onViewClass={() => nextClass && handleConfirmClass(nextClass.id, nextClass.day, nextClass.date, nextClass.time)}
+          onViewClass={() => nextClass && handleConfirmClass(nextClass)}
         />
         
         {/* Upcoming classes section */}
         <UpcomingClasses 
           upcomingClasses={upcomingClasses} 
-          onSelectClass={handleConfirmClass} 
+          onSelectClass={(classId, day, date, time) => {
+            const classItem = upcomingClasses.find(c => c.id === classId);
+            if (classItem) handleConfirmClass(classItem);
+          }} 
         />
       </div>
       
@@ -86,10 +89,10 @@ const Index: React.FC = () => {
           onClose={handleCloseModal}
           classId={selectedClass.id}
           day={selectedClass.day}
-          date={selectedClass.date}
+          date={selectedClass.date || ''}
           time={selectedClass.time}
-          userName={user?.user_metadata?.full_name || 'Usuário'}
-          isPreferredDay={selectedClass.isPreferredDay}
+          userName={user?.full_name || 'Usuário'}
+          isPreferredDay={selectedClass.isPreferredDay || false}
           onConfirmSuccess={handleConfirmSuccess}
         />
       )}

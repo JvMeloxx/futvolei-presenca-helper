@@ -19,4 +19,9 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  define: {
+    'process.env.DATABASE_URL': JSON.stringify(process.env.DATABASE_URL),
+    'process.env.JWT_SECRET': JSON.stringify(process.env.JWT_SECRET),
+    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
+  },
 }));

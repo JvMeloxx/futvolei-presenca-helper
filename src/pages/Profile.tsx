@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/NeonAuthContext';
 import ProfileAvatar from '../components/profile/ProfileAvatar';
 import PersonalInfoForm from '../components/profile/PersonalInfoForm';
 import PreferencesForm from '../components/profile/PreferencesForm';

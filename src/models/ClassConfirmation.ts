@@ -1,5 +1,5 @@
 
-import { fetchClassById, fetchClassParticipants, toggleClassConfirmation as toggleConfirmation } from '@/repositories/classRepository';
+import { fetchClassById, fetchClassParticipants, toggleClassConfirmation as toggleConfirmation } from '@/repositories/neonClassRepository';
 
 export interface ClassParticipant {
   id: string;

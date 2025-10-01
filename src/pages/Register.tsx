@@ -3,7 +3,7 @@ import React, { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Input } from '../components/ui/input';
 import Button from '../components/Button';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/NeonAuthContext';
 import { CheckCircle, User, Mail, Lock, Calendar, Clock, Camera, X, Check, ChevronLeft } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -425,8 +425,8 @@ const Register: React.FC = () => {
                       key={day}
                       className={`flex items-center space-x-2 p-2 rounded-md border cursor-pointer transition-colors ${
                         form.watch("preferredDays")?.includes(day)
-                          ? "border-primary bg-primary/10 text-white"
-                          : "border-primary/30 text-primary-foreground"
+                          ? "border-primary bg-primary/10 text-foreground"
+                          : "border-primary/30 text-foreground"
                       }`}
                     >
                       <Checkbox
@@ -457,7 +457,7 @@ const Register: React.FC = () => {
 
               {/* Preferred Times */}
               <div className="space-y-2">
-                <Label className="text-primary-foreground flex items-center mb-2">
+                <Label className="text-foreground flex items-center mb-2">
                   <Clock size={16} className="mr-2" />
                   Horários Preferidos
                 </Label>
@@ -467,8 +467,8 @@ const Register: React.FC = () => {
                       key={time}
                       className={`flex items-center space-x-2 p-2 rounded-md border cursor-pointer transition-colors ${
                         form.watch("preferredTimes")?.includes(time)
-                          ? "border-primary bg-primary/10 text-white"
-                          : "border-primary/30 text-primary-foreground"
+                          ? "border-primary bg-primary/10 text-foreground"
+                          : "border-primary/30 text-foreground"
                       }`}
                     >
                       <Checkbox

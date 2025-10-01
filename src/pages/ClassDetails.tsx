@@ -5,7 +5,7 @@ import Layout from '../components/Layout';
 import Button from '../components/Button';
 import UserAvatar from '../components/UserAvatar';
 import { Calendar, Clock, MapPin, Users, User as UserIcon, ArrowLeft, Check } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/NeonAuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { getClassDetailsById, toggleClassConfirmation, ClassDetails as ClassDetailsType, ClassParticipant } from '@/models/ClassConfirmation';
 

@@ -48,8 +48,8 @@ const PreferencesForm: React.FC<PreferencesFormProps> = ({
             className={`
               py-2 px-3 rounded-lg border text-sm font-medium transition-all duration-200
               ${preferredDays.includes(day.value) 
-                ? 'bg-primary text-primary-foreground border-primary' 
-                : 'bg-secondary text-secondary-foreground border-secondary hover:bg-secondary/80'}
+                ? 'bg-primary text-foreground border-primary' 
+                : 'bg-secondary text-foreground border-secondary hover:bg-secondary/80'}
             `}
             type="button"
           >
@@ -71,8 +71,8 @@ const PreferencesForm: React.FC<PreferencesFormProps> = ({
             className={`
               py-2 px-3 rounded-lg border text-sm font-medium transition-all duration-200
               ${preferredTimes.includes(time.value) 
-                ? 'bg-primary text-primary-foreground border-primary' 
-                : 'bg-secondary text-secondary-foreground border-secondary hover:bg-secondary/80'}
+                ? 'bg-primary text-foreground border-primary' 
+                : 'bg-secondary text-foreground border-secondary hover:bg-secondary/80'}
             `}
             type="button"
           >

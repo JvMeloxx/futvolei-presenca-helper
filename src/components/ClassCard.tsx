@@ -1,7 +1,10 @@
 
 import React from 'react';
-import { Clock, Users } from 'lucide-react';
+import { Clock, Users, MapPin, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { CapacityBadge, DateTimeBadge, LocationBadge } from '@/components/ui/status-badge';
+import { LoadingButton } from '@/components/ui/loading-spinner';
+import { cn } from '@/lib/utils';
 
 interface ClassCardProps {
   id: string;
@@ -9,10 +12,17 @@ interface ClassCardProps {
   date: string;
   time: string;
   confirmedCount: number;
+  maxParticipants?: number;
+  location?: string;
+  instructor?: string;
   isPast?: boolean;
   isSelected?: boolean;
+  isConfirmed?: boolean;
   onClick?: () => void;
+  onConfirm?: () => void;
+  onCancel?: () => void;
   showDetails?: boolean;
+  loading?: boolean;
 }
 
 const ClassCard: React.FC<ClassCardProps> = ({
@@ -21,13 +31,20 @@ const ClassCard: React.FC<ClassCardProps> = ({
   date,
   time,
   confirmedCount,
+  maxParticipants = 12,
+  location,
+  instructor,
   isPast = false,
   isSelected = false,
+  isConfirmed = false,
   onClick,
+  onConfirm,
+  onCancel,
   showDetails = true,
+  loading = false,
 }) => {
   const handleClick = (e: React.MouseEvent) => {
-    if (isPast) return;
+    if (isPast || loading) return;
     
     if (onClick) {
       e.preventDefault();
@@ -35,45 +52,113 @@ const ClassCard: React.FC<ClassCardProps> = ({
     }
   };
 
+  const handleConfirm = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onConfirm && !loading) {
+      onConfirm();
+    }
+  };
+
+  const handleCancel = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onCancel && !loading) {
+      onCancel();
+    }
+  };
+
+  const isFull = confirmedCount >= maxParticipants;
+
   return (
     <div
       onClick={handleClick}
-      className={`
-        block rounded-xl overflow-hidden card-hover
-        ${isPast ? 'opacity-40 pointer-events-none' : 'cursor-pointer'}
-        ${isSelected ? 'ring-2 ring-primary' : ''}
-      `}
+      className={cn(
+        "block rounded-xl overflow-hidden transition-all duration-200",
+        "hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]",
+        {
+          "opacity-50 pointer-events-none": isPast,
+          "cursor-pointer": !isPast && !loading,
+          "ring-2 ring-primary ring-offset-2": isSelected,
+          "cursor-not-allowed": loading
+        }
+      )}
     >
-      <div className="glass-effect p-4">
-        <div className="flex justify-between items-start mb-3">
-          <div>
-            <p className="text-sm font-medium text-primary-foreground/80">{day}</p>
-            <h3 className="text-lg font-semibold text-primary-foreground">{date}</h3>
+      <div className="glass-effect p-4 space-y-3">
+        {/* Header com dia e status */}
+        <div className="flex justify-between items-start">
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-foreground/80">{day}</p>
+            <h3 className="text-lg font-semibold text-foreground">{date}</h3>
           </div>
-          {isPast && (
-            <span className="text-xs bg-primary/20 px-2 py-1 rounded-full text-primary-foreground">
-              Passado
-            </span>
-          )}
-          {isSelected && (
-            <span className="text-xs bg-primary text-primary-foreground px-2 py-1 rounded-full">
-              Selecionado
-            </span>
-          )}
+          
+          <div className="flex flex-col gap-1">
+            {isPast && (
+              <span className="text-xs bg-muted/20 px-2 py-1 rounded-full text-muted-foreground">
+                Passado
+              </span>
+            )}
+            {isConfirmed && !isPast && (
+              <span className="text-xs bg-green-500/20 px-2 py-1 rounded-full text-green-400">
+                Confirmado
+              </span>
+            )}
+            {isFull && !isPast && (
+              <span className="text-xs bg-red-500/20 px-2 py-1 rounded-full text-red-400">
+                Lotado
+              </span>
+            )}
+          </div>
         </div>
         
         {showDetails && (
-          <>
-            <div className="flex items-center text-sm text-primary-foreground/80 mb-2">
-              <Clock size={14} className="mr-1 text-primary" />
-              <span>{time}</span>
+          <div className="space-y-2">
+            {/* Badges informativos */}
+            <div className="flex flex-wrap gap-2">
+              <DateTimeBadge date={date} time={time} variant="time" />
+              <CapacityBadge current={confirmedCount} max={maxParticipants} />
+              {location && <LocationBadge location={location} />}
             </div>
             
-            <div className="flex items-center text-sm text-primary-foreground/80">
-              <Users size={14} className="mr-1 text-primary" />
-              <span>{confirmedCount} confirmados</span>
-            </div>
-          </>
+            {/* Instrutor */}
+            {instructor && (
+              <div className="flex items-center text-sm text-primary-foreground/80">
+                <User size={14} className="mr-2 text-primary" />
+                <span>Prof. {instructor}</span>
+              </div>
+            )}
+            
+            {/* Botões de ação */}
+            {!isPast && (onConfirm || onCancel) && (
+              <div className="flex gap-2 pt-2">
+                {!isConfirmed && onConfirm && !isFull && (
+                  <LoadingButton
+                    loading={loading}
+                    onClick={handleConfirm}
+                    variant="default"
+                    className="flex-1 text-sm"
+                  >
+                    Confirmar
+                  </LoadingButton>
+                )}
+                
+                {isConfirmed && onCancel && (
+                  <LoadingButton
+                    loading={loading}
+                    onClick={handleCancel}
+                    variant="destructive"
+                    className="flex-1 text-sm"
+                  >
+                    Cancelar
+                  </LoadingButton>
+                )}
+                
+                {isFull && !isConfirmed && (
+                  <div className="flex-1 text-center text-sm text-muted-foreground py-2">
+                    Aula lotada
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         )}
       </div>
     </div>

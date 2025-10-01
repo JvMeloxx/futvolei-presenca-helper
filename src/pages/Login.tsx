@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import Button from '../components/Button';
 import { Input } from '../components/ui/input';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/NeonAuthContext';
 import { ChevronRight, User, Key } from 'lucide-react';
 
 const Login: React.FC = () => {
