@@ -39,6 +39,19 @@ router.get('/', optionalAuth, async (req, res) => {
     // Adicionar limit e offset
     queryParams.push(limit, offset);
 
+    console.log('Executing query:', {
+      text: `SELECT 
+        c.id, c.title, c.description, c.date, c.time, c.location, 
+        c.max_participants, c.instructor, c.created_at,
+        COUNT(cc.user_id) as confirmed_count
+       FROM classes c
+       LEFT JOIN class_confirmations cc ON c.id = cc.class_id AND cc.confirmed = true
+       ${whereClause}
+       GROUP BY c.id, c.title, c.description, c.date, c.time, c.location, c.max_participants, c.instructor, c.created_at
+       ORDER BY c.date ASC, c.time ASC
+       LIMIT $${paramCount} OFFSET $${paramCount + 1}`, params: queryParams
+    });
+
     const result = await query(
       `SELECT 
         c.id, c.title, c.description, c.date, c.time, c.location, 
@@ -85,9 +98,10 @@ router.get('/', optionalAuth, async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Erro ao buscar aulas:', error);
+    console.error('Erro ao buscar aulas - Detalhes:', error.message, error.stack);
     res.status(500).json({
-      error: 'Falha ao buscar aulas'
+      error: 'Falha ao buscar aulas',
+      details: error.message // Sending details to client for debugging (remove in prod)
     });
   }
 });
@@ -200,7 +214,7 @@ router.get('/:id/participants', classIdValidation, async (req, res) => {
 // Rota para confirmar/cancelar presença em uma aula
 router.post('/:id/confirm', classIdValidation, confirmationValidation, authenticateToken, async (req, res) => {
   const client = await getClient();
-  
+
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -239,7 +253,7 @@ router.post('/:id/confirm', classIdValidation, confirmationValidation, authentic
       );
 
       const currentParticipants = parseInt(participantsResult.rows[0].count);
-      
+
       if (currentParticipants >= classData.max_participants) {
         await client.query('ROLLBACK');
         return res.status(409).json({

@@ -1,9 +1,10 @@
-import React from 'react';
+import * as React from "react"
 import { cn } from "@/lib/utils"
 
 interface SkeletonProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?: 'default' | 'rounded' | 'circular';
   animation?: 'pulse' | 'wave' | 'shimmer';
+  className?: string;
 }
 
 function Skeleton({
@@ -40,55 +41,53 @@ function Skeleton({
 // Skeleton específico para ClassCard
 export const ClassCardSkeleton: React.FC<{ className?: string }> = ({ className }) => {
   return (
-    <div className={cn('p-4 border rounded-lg space-y-4 animate-pulse', className)}>
-      {/* Header com título e badges */}
-      <div className="flex justify-between items-start">
-        <div className="space-y-2 flex-1">
-          <Skeleton className="h-6 w-3/4" variant="rounded" />
-          <div className="flex gap-2">
-            <Skeleton className="h-5 w-16" variant="rounded" />
-            <Skeleton className="h-5 w-20" variant="rounded" />
-            <Skeleton className="h-5 w-14" variant="rounded" />
+    <div className={cn('rounded-xl overflow-hidden border bg-card text-card-foreground shadow-sm animate-pulse', className)}>
+      <div className="p-4 space-y-3">
+        {/* Header com dia e status */}
+        <div className="flex justify-between items-start">
+          <div className="space-y-1">
+            <Skeleton className="h-4 w-16" /> {/* Dia */}
+            <Skeleton className="h-6 w-24" /> {/* Data */}
+          </div>
+          <div className="flex flex-col gap-1">
+            <Skeleton className="h-5 w-20 rounded-full" /> {/* Status badge */}
           </div>
         </div>
-        <Skeleton className="h-8 w-8" variant="circular" />
-      </div>
 
-      {/* Informações da aula */}
-      <div className="space-y-2">
-        <div className="flex items-center gap-2">
-          <Skeleton className="h-4 w-4" variant="circular" />
-          <Skeleton className="h-4 w-32" />
-        </div>
-        <div className="flex items-center gap-2">
-          <Skeleton className="h-4 w-4" variant="circular" />
-          <Skeleton className="h-4 w-24" />
-        </div>
-        <div className="flex items-center gap-2">
-          <Skeleton className="h-4 w-4" variant="circular" />
-          <Skeleton className="h-4 w-28" />
-        </div>
-      </div>
+        <div className="space-y-2">
+          {/* Badges informativos */}
+          <div className="flex flex-wrap gap-2">
+            <Skeleton className="h-5 w-32 rounded-md" />
+            <Skeleton className="h-5 w-24 rounded-md" />
+            <Skeleton className="h-5 w-28 rounded-md" />
+          </div>
 
-      {/* Botões de ação */}
-      <div className="flex gap-2 pt-2">
-        <Skeleton className="h-9 w-24" variant="rounded" />
-        <Skeleton className="h-9 w-20" variant="rounded" />
+          {/* Instrutor */}
+          <div className="flex items-center gap-2 pt-1">
+            <Skeleton className="h-4 w-4 rounded-full" />
+            <Skeleton className="h-4 w-32" />
+          </div>
+
+          {/* Botões de ação */}
+          <div className="flex gap-2 pt-2">
+            <Skeleton className="h-9 w-full rounded-md" />
+          </div>
+        </div>
       </div>
     </div>
   );
 };
 
 // Skeleton para lista de aulas
-export const ClassListSkeleton: React.FC<{ 
-  count?: number; 
+export const ClassListSkeleton: React.FC<{
+  count?: number;
   className?: string;
 }> = ({ count = 3, className }) => {
   return (
     <div className={cn('space-y-4', className)}>
       {Array.from({ length: count }).map((_, index) => (
-        <ClassCardSkeleton 
-          key={index} 
+        <ClassCardSkeleton
+          key={index}
           style={{
             animationDelay: `${index * 100}ms`
           }}
@@ -126,14 +125,14 @@ export const StatsSkeleton: React.FC<{ className?: string }> = ({ className }) =
 };
 
 // Skeleton para texto com múltiplas linhas
-export const TextSkeleton: React.FC<{ 
+export const TextSkeleton: React.FC<{
   lines?: number;
   className?: string;
 }> = ({ lines = 3, className }) => {
   return (
     <div className={cn('space-y-2 animate-pulse', className)}>
       {Array.from({ length: lines }).map((_, index) => (
-        <Skeleton 
+        <Skeleton
           key={index}
           className={cn(
             'h-4',

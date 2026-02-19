@@ -6,6 +6,8 @@ import { CapacityBadge, DateTimeBadge, LocationBadge } from '@/components/ui/sta
 import { LoadingButton } from '@/components/ui/loading-spinner';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
+import { useHaptic } from '@/hooks/use-haptic';
+import { useSwipe } from '@/hooks/use-swipe';
 
 interface ClassCardProps {
   id: string;
@@ -44,10 +46,29 @@ const ClassCard: React.FC<ClassCardProps> = ({
   showDetails = true,
   loading = false,
 }) => {
+  const { vibrate } = useHaptic();
+
+  // Swipe gestures
+  const { onTouchStart, onTouchMove, onTouchEnd } = useSwipe({
+    onSwipedRight: () => {
+      if (!isConfirmed && !isFull && onConfirm && !loading && !isPast) {
+        vibrate('medium');
+        onConfirm();
+      }
+    },
+    onSwipedLeft: () => {
+      if (isConfirmed && onCancel && !loading && !isPast) {
+        vibrate('medium');
+        onCancel();
+      }
+    }
+  });
+
   const handleClick = (e: React.MouseEvent) => {
     if (isPast || loading) return;
-    
+
     if (onClick) {
+      vibrate('selection');
       e.preventDefault();
       onClick();
     }
@@ -56,6 +77,7 @@ const ClassCard: React.FC<ClassCardProps> = ({
   const handleConfirm = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (onConfirm && !loading) {
+      vibrate('medium');
       onConfirm();
     }
   };
@@ -63,6 +85,7 @@ const ClassCard: React.FC<ClassCardProps> = ({
   const handleCancel = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (onCancel && !loading) {
+      vibrate('medium');
       onCancel();
     }
   };
@@ -72,6 +95,9 @@ const ClassCard: React.FC<ClassCardProps> = ({
   return (
     <div
       onClick={handleClick}
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
       className={cn(
         "block rounded-xl overflow-hidden transition-all duration-200",
         "hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]",
@@ -90,7 +116,7 @@ const ClassCard: React.FC<ClassCardProps> = ({
             <p className="text-sm font-medium text-foreground/80">{day}</p>
             <h3 className="text-lg font-semibold text-foreground">{date}</h3>
           </div>
-          
+
           <div className="flex flex-col gap-1">
             {isPast && (
               <span className="text-xs bg-muted/20 px-2 py-1 rounded-full text-muted-foreground">
@@ -109,7 +135,7 @@ const ClassCard: React.FC<ClassCardProps> = ({
             )}
           </div>
         </div>
-        
+
         {showDetails && (
           <div className="space-y-2">
             {/* Badges informativos */}
@@ -126,7 +152,7 @@ const ClassCard: React.FC<ClassCardProps> = ({
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-              
+
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -140,7 +166,7 @@ const ClassCard: React.FC<ClassCardProps> = ({
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-              
+
               {location && (
                 <TooltipProvider>
                   <Tooltip>
@@ -156,7 +182,7 @@ const ClassCard: React.FC<ClassCardProps> = ({
                 </TooltipProvider>
               )}
             </div>
-            
+
             {/* Instrutor */}
             {instructor && (
               <TooltipProvider>
@@ -173,7 +199,7 @@ const ClassCard: React.FC<ClassCardProps> = ({
                 </Tooltip>
               </TooltipProvider>
             )}
-            
+
             {/* Botões de ação */}
             {!isPast && (onConfirm || onCancel) && (
               <div className="flex gap-2 pt-2">
@@ -198,7 +224,7 @@ const ClassCard: React.FC<ClassCardProps> = ({
                     </Tooltip>
                   </TooltipProvider>
                 )}
-                
+
                 {isConfirmed && onCancel && (
                   <TooltipProvider>
                     <Tooltip>
@@ -220,7 +246,7 @@ const ClassCard: React.FC<ClassCardProps> = ({
                     </Tooltip>
                   </TooltipProvider>
                 )}
-                
+
                 {isFull && !isConfirmed && (
                   <TooltipProvider>
                     <Tooltip>

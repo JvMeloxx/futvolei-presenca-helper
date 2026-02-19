@@ -1,42 +1,6 @@
-
-import { fetchClassById, fetchClassParticipants, toggleClassConfirmation as toggleConfirmation } from '@/repositories/neonClassRepository';
-
-export interface ClassParticipant {
-  id: string;
-  user_id: string;
-  class_id: string;
-  created_at: string;
-  user_details?: {
-    full_name: string;
-    avatar_url: string | null;
-  };
-}
-
-export interface ClassDetails {
-  id: string;
-  day: string;
-  time: string;
-  date: string;
-  location: string;
-  instructor: string;
-  max_participants: number;
-  confirmed_count: number;
-  participants?: ClassParticipant[];
-  user_confirmed?: boolean;
-}
-
-export interface TimeSlot {
-  time: string;
-  instructor: string;
-  location: string;
-  max_participants: number;
-}
-
-export interface ClassSchedule {
-  [day: string]: {
-    [timeSlot: string]: TimeSlot;
-  };
-}
+import { ClassDetails, ClassParticipant, ClassSchedule, TimeSlot } from '@/types/class';
+import { fetchClassById as fetchClassByIdRepo, fetchClassParticipants as fetchClassParticipantsRepo, toggleClassConfirmation as toggleConfirmationRepo } from '@/repositories/neonClassRepository';
+export type { ClassDetails, ClassParticipant, ClassSchedule, TimeSlot };
 
 // Class details mapping
 export const classSchedule: ClassSchedule = {
@@ -76,7 +40,7 @@ export const classSchedule: ClassSchedule = {
     '8:00': {
       time: '8:00',
       instructor: 'João Silva',
-      location: 'Quadra Central', 
+      location: 'Quadra Central',
       max_participants: 16
     },
     '12:00': {
@@ -107,7 +71,7 @@ export const classSchedule: ClassSchedule = {
   'Quarta': {
     '8:30': {
       time: '8:30',
-      instructor: 'João Silva', 
+      instructor: 'João Silva',
       location: 'Quadra Central',
       max_participants: 16
     },
@@ -172,30 +136,30 @@ export const classSchedule: ClassSchedule = {
 
 // Helper function to get class ID format from day and time
 export const getClassIdFromDayTime = (day: string, time: string): string => {
-  const dayPrefix: {[key: string]: string} = {
+  const dayPrefix: { [key: string]: string } = {
     'Segunda': 'm',
-    'Terça': 't', 
+    'Terça': 't',
     'Quarta': 'w',
     'Quinta': 'th'
   };
-  
+
   const prefix = dayPrefix[day] || '';
   const timeIndex = Object.keys(classSchedule[day] || {}).findIndex(t => t === time) + 1;
-  
+
   return `${prefix}${timeIndex}`;
 };
 
 // Get detailed class info by ID
 export const getClassDetailsById = async (classId: string): Promise<ClassDetails | null> => {
-  return fetchClassById(classId);
+  return fetchClassByIdRepo(classId);
 };
 
 // Get class participants
 export const getClassParticipants = async (classId: string): Promise<ClassParticipant[]> => {
-  return fetchClassParticipants(classId);
+  return fetchClassParticipantsRepo(classId);
 };
 
 // Confirm or cancel class attendance
 export const toggleClassConfirmation = async (classId: string, confirmed: boolean): Promise<boolean> => {
-  return toggleConfirmation(classId, confirmed);
+  return toggleConfirmationRepo(classId, confirmed);
 };

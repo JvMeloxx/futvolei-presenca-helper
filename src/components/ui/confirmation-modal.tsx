@@ -10,6 +10,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { LoadingButton } from '@/components/ui/loading-spinner';
+import { useHaptic } from '@/hooks/use-haptic';
 
 interface ConfirmationModalProps {
   isOpen: boolean;
@@ -34,11 +35,15 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   variant = 'default',
   loading = false,
 }) => {
+  const { vibrate } = useHaptic();
+
   const handleConfirm = async () => {
+    vibrate('success');
     try {
       await onConfirm();
       onClose();
     } catch (error) {
+      vibrate('error');
       // O erro será tratado pelo componente pai
       console.error('Erro na confirmação:', error);
     }
@@ -56,8 +61,8 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter className="animate-in slide-in-from-bottom-2 duration-300 delay-150">
-          <AlertDialogCancel 
-            onClick={onClose} 
+          <AlertDialogCancel
+            onClick={onClose}
             disabled={loading}
             className="transition-all duration-200 hover:scale-105 active:scale-95"
           >
@@ -104,7 +109,7 @@ export const useConfirmation = () => {
 
   const handleConfirm = React.useCallback(async () => {
     if (!config) return;
-    
+
     setLoading(true);
     try {
       await config.onConfirm();

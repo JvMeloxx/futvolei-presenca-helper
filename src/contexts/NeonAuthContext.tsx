@@ -55,10 +55,17 @@ export function NeonAuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const token = getToken();
         if (token) {
-          const sessionData = await neonGetSession(token);
-          if (sessionData) {
-            setSession(sessionData.session);
-            setUser(sessionData.user);
+          const result = await neonGetSession(token);
+          if ('session' in result) {
+            setSession(result.session);
+            // The backend /session endpoint returns { session: { ...user, etc } }
+            // We need to ensure we set user correctly.
+            // Our updated auth.ts getSession returns { session: ..., user: ... } if we adjusted it, 
+            // OR we rely on the session object containing the user.
+            // Let's check auth.ts implementation again. 
+            // The backend /session returns { session: { access_token, user, expires_at } }.
+            // So result.session.user is the user.
+            setUser(result.session.user);
           } else {
             // Token inválido, remover
             removeToken();
@@ -80,31 +87,33 @@ export function NeonAuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const signInData: SignInData = { email, password };
       const result = await neonSignIn(signInData);
-      
+
       if ('error' in result) {
         throw new Error(result.error);
       }
-      
+
+      const { session, user } = result as { session: AuthSession, user: AuthUser };
+
       // Salvar token e atualizar estado
-      saveToken(result.session.access_token);
-      setSession(result.session);
-      setUser(result.user);
-      
+      saveToken(session.access_token);
+      setSession(session);
+      setUser(user);
+
       toast({
         title: "Login realizado com sucesso",
         description: "Bem-vindo ao Futvôlei Presença!",
       });
-      
+
       navigate('/');
     } catch (error: any) {
       let errorMessage = "Falha ao fazer login. Verifique suas credenciais.";
-      
+
       if (error.message) {
         if (error.message.includes("Email ou senha incorretos")) {
           errorMessage = "Email ou senha incorretos.";
         }
       }
-      
+
       toast({
         title: "Erro de autenticação",
         description: errorMessage,
@@ -126,27 +135,29 @@ export function NeonAuthProvider({ children }: { children: React.ReactNode }) {
         preferred_days: userData.preferredDays || [],
         preferred_times: userData.preferredTimes || []
       };
-      
+
       const result = await neonSignUp(signUpData);
-      
+
       if ('error' in result) {
         throw new Error(result.error);
       }
-      
+
+      const { session, user } = result as { session: AuthSession, user: AuthUser };
+
       // Salvar token e atualizar estado
-      saveToken(result.session.access_token);
-      setSession(result.session);
-      setUser(result.user);
-      
+      saveToken(session.access_token);
+      setSession(session);
+      setUser(user);
+
       toast({
         title: "Cadastro realizado com sucesso!",
         description: "Sua conta foi criada e você já está logado.",
       });
-      
+
       navigate('/');
     } catch (error: any) {
       let errorMessage = "Falha ao criar conta.";
-      
+
       if (error.message) {
         if (error.message.includes("Este email já está registrado")) {
           errorMessage = "Este email já está registrado.";
@@ -154,7 +165,7 @@ export function NeonAuthProvider({ children }: { children: React.ReactNode }) {
           errorMessage = "A senha deve ter pelo menos 8 caracteres.";
         }
       }
-      
+
       toast({
         title: "Erro no cadastro",
         description: errorMessage,
@@ -172,12 +183,12 @@ export function NeonAuthProvider({ children }: { children: React.ReactNode }) {
       removeToken();
       setSession(null);
       setUser(null);
-      
+
       toast({
         title: "Logout realizado",
         description: "Você foi desconectado com sucesso.",
       });
-      
+
       navigate('/login');
     } catch (error: any) {
       toast({
@@ -192,7 +203,7 @@ export function NeonAuthProvider({ children }: { children: React.ReactNode }) {
 
   const updateProfile = async (data: any) => {
     if (!user) return;
-    
+
     setIsLoading(true);
     try {
       const updateData = {
@@ -201,13 +212,13 @@ export function NeonAuthProvider({ children }: { children: React.ReactNode }) {
         preferred_days: Array.isArray(data.preferredDays) ? data.preferredDays : data.preferredDays?.split(',') || [],
         preferred_times: Array.isArray(data.preferredTimes) ? data.preferredTimes : data.preferredTimes?.split(',') || []
       };
-      
+
       const result = await neonUpdateUser(user.id, updateData);
-      
+
       if ('error' in result) {
         throw new Error(result.error);
       }
-      
+
       // Atualizar estado local com os novos dados
       const updatedUser = {
         ...user,
@@ -220,7 +231,7 @@ export function NeonAuthProvider({ children }: { children: React.ReactNode }) {
           preferred_times: result.user.preferred_times
         }
       };
-      
+
       setUser(updatedUser);
       if (session) {
         setSession({
@@ -228,7 +239,7 @@ export function NeonAuthProvider({ children }: { children: React.ReactNode }) {
           user: updatedUser
         });
       }
-      
+
       toast({
         title: "Perfil atualizado",
         description: "Suas informações foram atualizadas com sucesso."

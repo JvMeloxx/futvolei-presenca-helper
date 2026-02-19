@@ -11,8 +11,14 @@ import classRoutes from './routes/classes.js';
 import userRoutes from './routes/users.js';
 import notificationRoutes from './routes/notifications.js';
 
-// Configurar variáveis de ambiente
-dotenv.config();
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Configurar variáveis de ambiente (carregar da raiz se não encontrar no diretório atual)
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -51,8 +57,8 @@ app.use('/api/notifications', notificationRoutes);
 
 // Rota de health check
 app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
+  res.json({
+    status: 'OK',
     timestamp: new Date().toISOString(),
     uptime: process.uptime()
   });
@@ -61,20 +67,20 @@ app.get('/api/health', (req, res) => {
 // Middleware de tratamento de erros
 app.use((err, req, res, next) => {
   console.error('Erro:', err.stack);
-  
+
   if (err.name === 'ValidationError') {
     return res.status(400).json({
       error: 'Dados inválidos',
       details: err.message
     });
   }
-  
+
   if (err.name === 'JsonWebTokenError') {
     return res.status(401).json({
       error: 'Token inválido'
     });
   }
-  
+
   res.status(500).json({
     error: 'Erro interno do servidor'
   });
@@ -87,11 +93,13 @@ app.use('*', (req, res) => {
   });
 });
 
-// Iniciar servidor
-app.listen(PORT, () => {
-  console.log(`🚀 Servidor rodando na porta ${PORT}`);
-  console.log(`📱 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:8080'}`);
-  console.log(`🔗 API URL: http://localhost:${PORT}/api`);
-});
+// Iniciar servidor apenas se não estiver na Vercel (ou ambiente de teste)
+if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`🚀 Servidor rodando na porta ${PORT}`);
+    console.log(`📱 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:8080'}`);
+    console.log(`🔗 API URL: http://localhost:${PORT}/api`);
+  });
+}
 
 export default app;

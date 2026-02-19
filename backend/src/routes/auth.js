@@ -1,8 +1,7 @@
 import express from 'express';
-import bcrypt from 'bcryptjs';
 import { body, validationResult } from 'express-validator';
-import { query } from '../config/database.js';
-import { authenticateToken, generateToken } from '../middleware/auth.js';
+import authService from '../services/authService.js';
+import { authenticateToken } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -34,58 +33,22 @@ router.post('/signup', signUpValidation, async (req, res) => {
 
     const { email, password, full_name, avatar_url, preferred_days, preferred_times } = req.body;
 
-    // Verificar se usuário já existe
-    const existingUser = await query(
-      'SELECT id FROM users WHERE email = $1',
-      [email]
-    );
-
-    if (existingUser.rows.length > 0) {
-      return res.status(409).json({
-        error: 'Email já está em uso'
+    try {
+      const result = await authService.register({
+        email,
+        password,
+        fullName: full_name,
+        avatarUrl: avatar_url,
+        preferredDays: preferred_days,
+        preferredTimes: preferred_times
       });
-    }
-
-    // Hash da senha
-    const saltRounds = 12;
-    const passwordHash = await bcrypt.hash(password, saltRounds);
-
-    // Inserir usuário
-    const result = await query(
-      `INSERT INTO users (email, password_hash, full_name, avatar_url, preferred_days, preferred_times, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
-       RETURNING id, email, full_name, avatar_url, preferred_days, preferred_times`,
-      [email, passwordHash, full_name, avatar_url || null, preferred_days || [], preferred_times || []]
-    );
-
-    const user = result.rows[0];
-
-    // Gerar token
-    const token = generateToken(user.id);
-    const expiresAt = Date.now() + (7 * 24 * 60 * 60 * 1000); // 7 dias
-
-    res.status(201).json({
-      user: {
-        id: user.id,
-        email: user.email,
-        full_name: user.full_name,
-        avatar_url: user.avatar_url,
-        preferred_days: user.preferred_days,
-        preferred_times: user.preferred_times
-      },
-      session: {
-        access_token: token,
-        user: {
-          id: user.id,
-          email: user.email,
-          full_name: user.full_name,
-          avatar_url: user.avatar_url,
-          preferred_days: user.preferred_days,
-          preferred_times: user.preferred_times
-        },
-        expires_at: expiresAt
+      res.status(201).json(result);
+    } catch (serviceError) {
+      if (serviceError.message === 'EMAIL_IN_USE') {
+        return res.status(409).json({ error: 'Email já está em uso' });
       }
-    });
+      throw serviceError;
+    }
   } catch (error) {
     console.error('Erro no registro:', error);
     res.status(500).json({
@@ -108,49 +71,15 @@ router.post('/signin', signInValidation, async (req, res) => {
 
     const { email, password } = req.body;
 
-    // Buscar usuário
-    const result = await query(
-      'SELECT id, email, password_hash, full_name, avatar_url, preferred_days, preferred_times FROM users WHERE email = $1',
-      [email]
-    );
-
-    if (result.rows.length === 0) {
-      return res.status(401).json({
-        error: 'Email ou senha incorretos'
-      });
-    }
-
-    const user = result.rows[0];
-
-    // Verificar senha
-    const isValidPassword = await bcrypt.compare(password, user.password_hash);
-    if (!isValidPassword) {
-      return res.status(401).json({
-        error: 'Email ou senha incorretos'
-      });
-    }
-
-    // Gerar token
-    const token = generateToken(user.id);
-    const expiresAt = Date.now() + (7 * 24 * 60 * 60 * 1000); // 7 dias
-
-    const authUser = {
-      id: user.id,
-      email: user.email,
-      full_name: user.full_name,
-      avatar_url: user.avatar_url,
-      preferred_days: user.preferred_days,
-      preferred_times: user.preferred_times
-    };
-
-    res.json({
-      user: authUser,
-      session: {
-        access_token: token,
-        user: authUser,
-        expires_at: expiresAt
+    try {
+      const result = await authService.login(email, password);
+      res.json(result);
+    } catch (serviceError) {
+      if (serviceError.message === 'INVALID_CREDENTIALS') {
+        return res.status(401).json({ error: 'Email ou senha incorretos' });
       }
-    });
+      throw serviceError;
+    }
   } catch (error) {
     console.error('Erro no login:', error);
     res.status(500).json({
@@ -162,6 +91,9 @@ router.post('/signin', signInValidation, async (req, res) => {
 // Rota para obter perfil do usuário
 router.get('/profile', authenticateToken, async (req, res) => {
   try {
+    // req.user comes from middleware, but let's encourage fetching fresh data if needed,
+    // or just return req.user if it's populated enough by middleware.
+    // The previous implementation just returned req.user.
     res.json({
       user: req.user
     });
@@ -192,56 +124,19 @@ router.put('/profile', authenticateToken, [
     const { full_name, avatar_url, preferred_days, preferred_times } = req.body;
     const userId = req.user.id;
 
-    // Construir query de atualização dinamicamente
-    const updates = [];
-    const values = [];
-    let paramCount = 1;
+    const updatedUser = await authService.updateUserProfile(userId, {
+      fullName: full_name,
+      avatarUrl: avatar_url,
+      preferredDays: preferred_days,
+      preferredTimes: preferred_times
+    });
 
-    if (full_name !== undefined) {
-      updates.push(`full_name = $${paramCount}`);
-      values.push(full_name);
-      paramCount++;
-    }
-
-    if (avatar_url !== undefined) {
-      updates.push(`avatar_url = $${paramCount}`);
-      values.push(avatar_url);
-      paramCount++;
-    }
-
-    if (preferred_days !== undefined) {
-      updates.push(`preferred_days = $${paramCount}`);
-      values.push(preferred_days);
-      paramCount++;
-    }
-
-    if (preferred_times !== undefined) {
-      updates.push(`preferred_times = $${paramCount}`);
-      values.push(preferred_times);
-      paramCount++;
-    }
-
-    if (updates.length === 0) {
-      return res.json({ user: req.user });
-    }
-
-    updates.push(`updated_at = NOW()`);
-    values.push(userId);
-
-    const result = await query(
-      `UPDATE users SET ${updates.join(', ')} WHERE id = $${paramCount}
-       RETURNING id, email, full_name, avatar_url, preferred_days, preferred_times`,
-      values
-    );
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({
-        error: 'Usuário não encontrado'
-      });
+    if (!updatedUser) {
+      return res.status(404).json({ error: 'Usuário não encontrado' });
     }
 
     res.json({
-      user: result.rows[0]
+      user: updatedUser
     });
   } catch (error) {
     console.error('Erro ao atualizar perfil:', error);
