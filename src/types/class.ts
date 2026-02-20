@@ -21,6 +21,7 @@ export interface ClassDetails {
     confirmed_count: number;
     participants?: ClassParticipant[];
     user_confirmed?: boolean;
+    isPreferredDay?: boolean;
 }
 
 export interface TimeSlot {

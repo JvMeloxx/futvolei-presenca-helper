@@ -1,18 +1,21 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import {
-  signIn as neonSignIn,
-  signUp as neonSignUp,
-  updateUser as neonUpdateUser,
-  getSession as neonGetSession,
-  AuthUser,
-  AuthSession,
-  SignUpData,
-  SignInData
-} from '@/integrations/neon/auth';
+import { supabase } from '@/integrations/supabase/client';
+import { AuthSession } from '@supabase/supabase-js';
 
-type NeonAuthContextType = {
+// Define the AuthUser type based on the profiles table
+export interface AuthUser {
+  id: string;
+  email: string;
+  full_name?: string;
+  avatar_url?: string;
+  preferred_days?: string[];
+  preferred_times?: string[];
+  [key: string]: any;
+}
+
+type SupabaseAuthContextType = {
   session: AuthSession | null;
   user: AuthUser | null;
   isLoading: boolean;
@@ -22,9 +25,7 @@ type NeonAuthContextType = {
   updateProfile: (data: any) => Promise<void>;
 };
 
-const NeonAuthContext = createContext<NeonAuthContextType | undefined>(undefined);
-
-const TOKEN_KEY = 'neon_auth_token';
+const SupabaseAuthContext = createContext<SupabaseAuthContextType | undefined>(undefined);
 
 export function NeonAuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<AuthSession | null>(null);
@@ -33,85 +34,88 @@ export function NeonAuthProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Função para salvar token no localStorage
-  const saveToken = (token: string) => {
-    localStorage.setItem(TOKEN_KEY, token);
-  };
-
-  // Função para remover token do localStorage
-  const removeToken = () => {
-    localStorage.removeItem(TOKEN_KEY);
-  };
-
-  // Função para obter token do localStorage
-  const getToken = (): string | null => {
-    return localStorage.getItem(TOKEN_KEY);
-  };
-
-  // Verificar sessão ao carregar a aplicação
   useEffect(() => {
-    const checkSession = async () => {
-      setIsLoading(true);
+    // Obter sessão inicial
+    const getInitialSession = async () => {
       try {
-        const token = getToken();
-        if (token) {
-          const result = await neonGetSession(token);
-          if ('session' in result) {
-            setSession(result.session);
-            // The backend /session endpoint returns { session: { ...user, etc } }
-            // We need to ensure we set user correctly.
-            // Our updated auth.ts getSession returns { session: ..., user: ... } if we adjusted it, 
-            // OR we rely on the session object containing the user.
-            // Let's check auth.ts implementation again. 
-            // The backend /session returns { session: { access_token, user, expires_at } }.
-            // So result.session.user is the user.
-            setUser(result.session.user);
-          } else {
-            // Token inválido, remover
-            removeToken();
-          }
+        const { data: { session } } = await supabase.auth.getSession();
+        setSession(session);
+
+        if (session?.user) {
+          await fetchProfile(session.user.id, session.user.email || '');
         }
       } catch (error) {
         console.error('Erro ao verificar sessão:', error);
-        removeToken();
       } finally {
         setIsLoading(false);
       }
     };
 
-    checkSession();
+    getInitialSession();
+
+    // Escutar mudanças de autenticação
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      setSession(session);
+
+      if (session?.user) {
+        await fetchProfile(session.user.id, session.user.email || '');
+      } else {
+        setUser(null);
+      }
+      setIsLoading(false);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
+
+  const fetchProfile = async (userId: string, email: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Erro ao buscar perfil:', error);
+      }
+
+      setUser({
+        id: userId,
+        email: email,
+        ...data
+      });
+    } catch (error) {
+      console.error('Falha ao obter perfil do Supabase', error);
+      setUser({ id: userId, email });
+    }
+  };
 
   const signIn = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const signInData: SignInData = { email, password };
-      const result = await neonSignIn(signInData);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-      if ('error' in result) {
-        throw new Error(result.error);
+      if (error) {
+        throw error;
       }
-
-      const { session, user } = result as { session: AuthSession, user: AuthUser };
-
-      // Salvar token e atualizar estado
-      saveToken(session.access_token);
-      setSession(session);
-      setUser(user);
 
       toast({
         title: "Login realizado com sucesso",
-        description: "Bem-vindo ao Futvôlei Presença!",
+        description: "Bem-vindo ao Futevôlei Presença!",
       });
 
       navigate('/');
     } catch (error: any) {
       let errorMessage = "Falha ao fazer login. Verifique suas credenciais.";
 
-      if (error.message) {
-        if (error.message.includes("Email ou senha incorretos")) {
-          errorMessage = "Email ou senha incorretos.";
-        }
+      if (error.message && (error.message.includes("Invalid login credentials") || error.message.includes("Email ou senha incorretos"))) {
+        errorMessage = "Email ou senha incorretos.";
       }
 
       toast({
@@ -119,35 +123,43 @@ export function NeonAuthProvider({ children }: { children: React.ReactNode }) {
         description: errorMessage,
         variant: "destructive",
       });
+      throw error;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const signUp = async (email: string, password: string, userData: any) => {
+  const signUp = async (email: string, password: string, userData: Record<string, any>) => {
     setIsLoading(true);
     try {
-      const signUpData: SignUpData = {
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        full_name: userData.fullName,
-        avatar_url: userData.profileImage || null,
-        preferred_days: userData.preferredDays || [],
-        preferred_times: userData.preferredTimes || []
-      };
+        options: {
+          data: {
+            full_name: userData.fullName,
+            avatar_url: userData.profileImage || null,
+          }
+        }
+      });
 
-      const result = await neonSignUp(signUpData);
-
-      if ('error' in result) {
-        throw new Error(result.error);
+      if (error) {
+        throw error;
       }
 
-      const { session, user } = result as { session: AuthSession, user: AuthUser };
+      // Se tiver preferred_days ou times, vamos atualizar o profile logo após criar
+      if (data.user && (userData.preferredDays || userData.preferredTimes)) {
+        // Wait briefly for the trigger to insert the profile
+        await new Promise(resolve => setTimeout(resolve, 500));
 
-      // Salvar token e atualizar estado
-      saveToken(session.access_token);
-      setSession(session);
-      setUser(user);
+        await supabase
+          .from('profiles')
+          .update({
+            preferred_days: userData.preferredDays || [],
+            preferred_times: userData.preferredTimes || []
+          })
+          .eq('id', data.user.id);
+      }
 
       toast({
         title: "Cadastro realizado com sucesso!",
@@ -159,7 +171,7 @@ export function NeonAuthProvider({ children }: { children: React.ReactNode }) {
       let errorMessage = "Falha ao criar conta.";
 
       if (error.message) {
-        if (error.message.includes("Este email já está registrado")) {
+        if (error.message.includes("already registered")) {
           errorMessage = "Este email já está registrado.";
         } else if (error.message.includes("Password should be at least")) {
           errorMessage = "A senha deve ter pelo menos 8 caracteres.";
@@ -171,6 +183,7 @@ export function NeonAuthProvider({ children }: { children: React.ReactNode }) {
         description: errorMessage,
         variant: "destructive",
       });
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -179,10 +192,9 @@ export function NeonAuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     setIsLoading(true);
     try {
-      // Remover token e limpar estado
-      removeToken();
-      setSession(null);
+      await supabase.auth.signOut();
       setUser(null);
+      setSession(null);
 
       toast({
         title: "Logout realizado",
@@ -201,7 +213,7 @@ export function NeonAuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const updateProfile = async (data: any) => {
+  const updateProfile = async (data: Record<string, any>) => {
     if (!user) return;
 
     setIsLoading(true);
@@ -213,32 +225,28 @@ export function NeonAuthProvider({ children }: { children: React.ReactNode }) {
         preferred_times: Array.isArray(data.preferredTimes) ? data.preferredTimes : data.preferredTimes?.split(',') || []
       };
 
-      const result = await neonUpdateUser(user.id, updateData);
+      const { error } = await supabase
+        .from('profiles')
+        .update(updateData)
+        .eq('id', user.id);
 
-      if ('error' in result) {
-        throw new Error(result.error);
+      if (error) {
+        throw error;
       }
+
+      // Atualizar Auth MetaData para consistência (opcional no Supabase)
+      await supabase.auth.updateUser({
+        data: {
+          full_name: data.name,
+          avatar_url: data.avatar_url,
+        }
+      });
 
       // Atualizar estado local com os novos dados
-      const updatedUser = {
+      setUser({
         ...user,
-        ...result.user,
-        user_metadata: {
-          ...user.user_metadata,
-          full_name: result.user.full_name,
-          avatar_url: result.user.avatar_url,
-          preferred_days: result.user.preferred_days,
-          preferred_times: result.user.preferred_times
-        }
-      };
-
-      setUser(updatedUser);
-      if (session) {
-        setSession({
-          ...session,
-          user: updatedUser
-        });
-      }
+        ...updateData
+      });
 
       toast({
         title: "Perfil atualizado",
@@ -265,16 +273,16 @@ export function NeonAuthProvider({ children }: { children: React.ReactNode }) {
     updateProfile,
   };
 
-  return <NeonAuthContext.Provider value={value}>{children}</NeonAuthContext.Provider>;
+  return <SupabaseAuthContext.Provider value={value}>{children}</SupabaseAuthContext.Provider>;
 }
 
 export const useNeonAuth = () => {
-  const context = useContext(NeonAuthContext);
+  const context = useContext(SupabaseAuthContext);
   if (!context) {
-    throw new Error('useNeonAuth deve ser usado dentro de um NeonAuthProvider');
+    throw new Error('useAuth deve ser usado dentro de um AuthProvider');
   }
   return context;
 };
 
-// Alias para manter compatibilidade com o código existente
+// Manteve-se o nome exportado como `useAuth` para não quebrar a aplicação que já usa isso
 export const useAuth = useNeonAuth;
