@@ -27,8 +27,8 @@ const registerSchema = z.object({
       "Informe nome e sobrenome"
     )
     .refine(
-      (val) => /^[A-Za-zÀ-ÖØ-öø-ÿ\s]+$/.test(val),
-      "Nome deve conter apenas letras e espaços"
+      (val) => /^[\p{L}\s'´`-]+$/u.test(val),
+      "Nome contém caracteres inválidos"
     ),
   email: z
     .string()
@@ -424,8 +424,8 @@ const Register: React.FC = () => {
                     <Label
                       key={day}
                       className={`flex items-center space-x-2 p-2 rounded-md border cursor-pointer transition-colors ${form.watch("preferredDays")?.includes(day)
-                          ? "border-primary bg-primary/10 text-foreground"
-                          : "border-primary/30 text-foreground"
+                        ? "border-primary bg-primary/10 text-foreground"
+                        : "border-primary/30 text-foreground"
                         }`}
                     >
                       <Checkbox
@@ -465,8 +465,8 @@ const Register: React.FC = () => {
                     <Label
                       key={time}
                       className={`flex items-center space-x-2 p-2 rounded-md border cursor-pointer transition-colors ${form.watch("preferredTimes")?.includes(time)
-                          ? "border-primary bg-primary/10 text-foreground"
-                          : "border-primary/30 text-foreground"
+                        ? "border-primary bg-primary/10 text-foreground"
+                        : "border-primary/30 text-foreground"
                         }`}
                     >
                       <Checkbox
