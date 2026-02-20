@@ -23,8 +23,8 @@ const registerSchema = z.object({
     .string()
     .min(3, "Nome completo é obrigatório")
     .refine(
-      (val) => val.trim().split(/\s+/).length >= 3,
-      "Nome completo deve ter pelo menos 3 palavras"
+      (val) => val.trim().split(/\s+/).length >= 2,
+      "Informe nome e sobrenome"
     )
     .refine(
       (val) => /^[A-Za-zÀ-ÖØ-öø-ÿ\s]+$/.test(val),
@@ -116,7 +116,7 @@ const Register: React.FC = () => {
         preferredDays: data.preferredDays,
         preferredTimes: data.preferredTimes
       });
-      
+
       // Redirecionamento é feito no AuthContext após o cadastro bem-sucedido
     } catch (error) {
       // Erros são tratados no AuthContext
@@ -133,7 +133,7 @@ const Register: React.FC = () => {
             <span className="ml-1">Voltar</span>
           </Link>
         </div>
-        
+
         <div className="text-center mb-8">
           <div className="mx-auto w-24 h-24 rounded-full overflow-hidden flex items-center justify-center mb-6">
             <img src="/logo-futevolei.png" alt="Logo Futevôlei" className="w-full h-full object-contain" />
@@ -262,15 +262,15 @@ const Register: React.FC = () => {
                         onClick={() => setPasswordVisible(!passwordVisible)}
                       >
                         {passwordVisible ? (
-                          <svg 
-                            xmlns="http://www.w3.org/2000/svg" 
-                            width="16" 
-                            height="16" 
-                            viewBox="0 0 24 24" 
-                            fill="none" 
-                            stroke="currentColor" 
-                            strokeWidth="2" 
-                            strokeLinecap="round" 
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
                             strokeLinejoin="round"
                           >
                             <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path>
@@ -279,15 +279,15 @@ const Register: React.FC = () => {
                             <line x1="2" x2="22" y1="2" y2="22"></line>
                           </svg>
                         ) : (
-                          <svg 
-                            xmlns="http://www.w3.org/2000/svg" 
-                            width="16" 
-                            height="16" 
-                            viewBox="0 0 24 24" 
-                            fill="none" 
-                            stroke="currentColor" 
-                            strokeWidth="2" 
-                            strokeLinecap="round" 
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
                             strokeLinejoin="round"
                           >
                             <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
@@ -331,15 +331,15 @@ const Register: React.FC = () => {
                         onClick={() => setConfirmPasswordVisible(!confirmPasswordVisible)}
                       >
                         {confirmPasswordVisible ? (
-                          <svg 
-                            xmlns="http://www.w3.org/2000/svg" 
-                            width="16" 
-                            height="16" 
-                            viewBox="0 0 24 24" 
-                            fill="none" 
-                            stroke="currentColor" 
-                            strokeWidth="2" 
-                            strokeLinecap="round" 
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
                             strokeLinejoin="round"
                           >
                             <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path>
@@ -348,15 +348,15 @@ const Register: React.FC = () => {
                             <line x1="2" x2="22" y1="2" y2="22"></line>
                           </svg>
                         ) : (
-                          <svg 
-                            xmlns="http://www.w3.org/2000/svg" 
-                            width="16" 
-                            height="16" 
-                            viewBox="0 0 24 24" 
-                            fill="none" 
-                            stroke="currentColor" 
-                            strokeWidth="2" 
-                            strokeLinecap="round" 
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
                             strokeLinejoin="round"
                           >
                             <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
@@ -423,11 +423,10 @@ const Register: React.FC = () => {
                   {availableDays.map((day) => (
                     <Label
                       key={day}
-                      className={`flex items-center space-x-2 p-2 rounded-md border cursor-pointer transition-colors ${
-                        form.watch("preferredDays")?.includes(day)
+                      className={`flex items-center space-x-2 p-2 rounded-md border cursor-pointer transition-colors ${form.watch("preferredDays")?.includes(day)
                           ? "border-primary bg-primary/10 text-foreground"
                           : "border-primary/30 text-foreground"
-                      }`}
+                        }`}
                     >
                       <Checkbox
                         checked={form.watch("preferredDays")?.includes(day)}
@@ -465,11 +464,10 @@ const Register: React.FC = () => {
                   {availableTimes.map((time) => (
                     <Label
                       key={time}
-                      className={`flex items-center space-x-2 p-2 rounded-md border cursor-pointer transition-colors ${
-                        form.watch("preferredTimes")?.includes(time)
+                      className={`flex items-center space-x-2 p-2 rounded-md border cursor-pointer transition-colors ${form.watch("preferredTimes")?.includes(time)
                           ? "border-primary bg-primary/10 text-foreground"
                           : "border-primary/30 text-foreground"
-                      }`}
+                        }`}
                     >
                       <Checkbox
                         checked={form.watch("preferredTimes")?.includes(time)}
@@ -525,10 +523,10 @@ const Register: React.FC = () => {
                 )}
               </div>
 
-              <Button 
-                type="submit" 
-                fullWidth 
-                size="lg" 
+              <Button
+                type="submit"
+                fullWidth
+                size="lg"
                 isLoading={isLoading}
                 rightIcon={<CheckCircle size={18} />}
               >
@@ -536,7 +534,7 @@ const Register: React.FC = () => {
               </Button>
             </form>
           </Form>
-          
+
           <div className="mt-6 text-center">
             <p className="text-sm text-primary-foreground">
               Já tem uma conta?{' '}
